@@ -4,7 +4,7 @@
 vcpkg_download_distfile(ARCHIVE
     URLS "https://github.com/redlintles/textforge-c/releases/download/v${VERSION}/textforge-c-${VERSION}.tar.gz"
     FILENAME "textforge-c-${VERSION}.tar.gz"
-    SHA512 dec8a55b0c429cd2af75f024ba2743af870d6596cae26053e1c5707d44501d5262aa08ffcf6c491eb9fbdd61d429ae12ad245ba1fc9ad1ba62110496ec246591
+    SHA512 3f9f2fab99888da49aecf8a4b81a5d121ec1ffdde4d59a233aedc0c4908ecf9485cfbde78401b06aaab1ed444690748be79421db45b82d0b986376c03375a3b3
 )
 vcpkg_extract_source_archive(SOURCE_PATH ARCHIVE "${ARCHIVE}")
 
