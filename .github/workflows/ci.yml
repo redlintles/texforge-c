@@ -1,0 +1,27 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux:
+    name: Linux x86_64 (glibc)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+      - name: Install C tooling
+        run: sudo apt-get update && sudo apt-get install -y valgrind pkg-config
+      - name: Fetch the independent upstream reference
+        run: cargo fetch --manifest-path scripts/upstream/Cargo.toml
+      - name: Full validation (format, lints, Rust tests, parity, C tests, installed package)
+        run: python3 scripts/check.py
+      - name: Package for inspection
+        run: make install DESTDIR="$PWD/dist" PREFIX=/usr
+      - uses: actions/upload-artifact@v4
+        with:
+          name: textforge-c-linux-x86_64
+          path: dist/
