@@ -8,5 +8,5 @@ Description: C bindings for the TextForge text-processing DSL
 Version: @VERSION@
 URL: https://github.com/redlintles/textforge
 Libs: -L${libdir} -ltextforge_c
-Libs.private: -lm -lrt -lpthread -lgcc_s -lutil -ldl
+Libs.private: @PRIVATE_LIBS@
 Cflags: -I${includedir}

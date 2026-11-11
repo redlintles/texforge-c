@@ -1,4 +1,4 @@
-//! Build script: gives the Linux shared library a versioned SONAME.
+//! Build script: shared-library identity for the platforms that need one.
 //!
 //! C consumers link against `libtextforge_c.so.<major>` so an incompatible ABI
 //! release can coexist with older installations. While the binding is 0.x the
@@ -15,6 +15,10 @@ fn main() {
             major
         };
         println!("cargo:rustc-cdylib-link-arg=-Wl,-soname,libtextforge_c.so.{abi}");
+    }
+    if target_os == "macos" || target_os == "ios" {
+        // Let consumers locate the dylib through their own rpath.
+        println!("cargo:rustc-cdylib-link-arg=-Wl,-install_name,@rpath/libtextforge_c.dylib");
     }
     println!("cargo:rerun-if-changed=build.rs");
 }

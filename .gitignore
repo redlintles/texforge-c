@@ -5,3 +5,4 @@
 /vendor/textforge/Cargo.lock
 /build/
 /dist/
+__pycache__/

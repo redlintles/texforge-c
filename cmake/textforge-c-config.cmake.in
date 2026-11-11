@@ -1,0 +1,25 @@
+# CMake package for the TextForge C library.
+#
+#   find_package(textforge-c CONFIG REQUIRED)
+#   target_link_libraries(app PRIVATE textforge-c::textforge-c)
+#
+# Each installed configuration adds a textforge-c-targets-<config>.cmake file
+# that sets the per-configuration library location.
+@PACKAGE_INIT@
+
+if(NOT TARGET textforge-c::textforge-c)
+    set(_IMPORT_PREFIX "${PACKAGE_PREFIX_DIR}")
+    add_library(textforge-c::textforge-c @TEXTFORGE_C_TYPE@ IMPORTED)
+    set_target_properties(textforge-c::textforge-c PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES "${_IMPORT_PREFIX}/@TEXTFORGE_C_INCLUDEDIR@"
+        INTERFACE_LINK_LIBRARIES "@TEXTFORGE_C_INTERFACE_LIBS@")
+    file(GLOB _textforge_c_configurations "${CMAKE_CURRENT_LIST_DIR}/textforge-c-targets-*.cmake")
+    foreach(_textforge_c_configuration IN LISTS _textforge_c_configurations)
+        include("${_textforge_c_configuration}")
+    endforeach()
+    unset(_textforge_c_configurations)
+    unset(_textforge_c_configuration)
+    unset(_IMPORT_PREFIX)
+endif()
+
+check_required_components(textforge-c)

@@ -1,0 +1,14 @@
+# Location of the textforge-c library for one build configuration.
+# Included by textforge-c-config.cmake, which defines _IMPORT_PREFIX.
+set_property(TARGET textforge-c::textforge-c APPEND PROPERTY IMPORTED_CONFIGURATIONS @TEXTFORGE_C_CONFIG_UPPER@)
+set_target_properties(textforge-c::textforge-c PROPERTIES
+    IMPORTED_LOCATION_@TEXTFORGE_C_CONFIG_UPPER@ "${_IMPORT_PREFIX}/@TEXTFORGE_C_LOCATION@"
+    IMPORTED_LINK_INTERFACE_LANGUAGES_@TEXTFORGE_C_CONFIG_UPPER@ "C")
+if("@TEXTFORGE_C_IMPLIB@")
+    set_target_properties(textforge-c::textforge-c PROPERTIES
+        IMPORTED_IMPLIB_@TEXTFORGE_C_CONFIG_UPPER@ "${_IMPORT_PREFIX}/@TEXTFORGE_C_IMPLIB@")
+endif()
+if("@TEXTFORGE_C_SONAME@")
+    set_target_properties(textforge-c::textforge-c PROPERTIES
+        IMPORTED_SONAME_@TEXTFORGE_C_CONFIG_UPPER@ "@TEXTFORGE_C_SONAME@")
+endif()

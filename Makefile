@@ -1,49 +1,34 @@
-# Build and install the TextForge C library (Linux; see docs/compatibility.md).
+# Convenience wrapper around the CMake build (CMakeLists.txt is the source of truth).
 #
-#   make                          build the release shared and static libraries
-#   make install [PREFIX=/usr/local] [DESTDIR=]   install library, header and pkg-config file
-#   make uninstall                remove what install added
-#   make check                    full validation (scripts/check.py)
-#   make test                     C test suites and header examples only
+#   make                                     build the release static and shared libraries
+#   make install [PREFIX=/usr/local] [DESTDIR=]   install both, the header, the CMake
+#                                            package and the pkg-config module
+#   make check                               full validation (scripts/check.py)
+#   make test                                C test suites and header examples only
+#
+# Package managers (Conan, vcpkg) call CMake directly with one linkage per build.
 
-PREFIX     ?= /usr/local
-LIBDIR     ?= $(PREFIX)/lib
-INCLUDEDIR ?= $(PREFIX)/include
-PKGCONFIGDIR ?= $(LIBDIR)/pkgconfig
-CARGO      ?= cargo
-PYTHON     ?= python3
-INSTALL    ?= install
-
-VERSION := $(shell sed -n 's/^version = "\(.*\)"/\1/p' Cargo.toml | head -n 1)
-ABI     := $(shell echo $(VERSION) | awk -F. '{ if ($$1 == 0) print "0." $$2; else print $$1 }')
-TARGET  := target/release
-SHARED  := libtextforge_c.so
-STATIC  := libtextforge_c.a
+PREFIX  ?= /usr/local
+CMAKE   ?= cmake
+PYTHON  ?= python3
+BUILD   ?= build
 
 .PHONY: all install uninstall check test clean
 
-all: $(TARGET)/$(SHARED) $(TARGET)/$(STATIC)
+all:
+	$(CMAKE) -S . -B "$(BUILD)/static" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=OFF -DCMAKE_INSTALL_PREFIX="$(PREFIX)"
+	$(CMAKE) -S . -B "$(BUILD)/shared" -DCMAKE_BUILD_TYPE=Release -DBUILD_SHARED_LIBS=ON -DCMAKE_INSTALL_PREFIX="$(PREFIX)"
+	$(CMAKE) --build "$(BUILD)/static"
+	$(CMAKE) --build "$(BUILD)/shared"
 
-$(TARGET)/$(SHARED) $(TARGET)/$(STATIC): Cargo.toml Cargo.lock build.rs $(wildcard src/*.rs) $(shell find vendor/textforge/src -name '*.rs')
-	$(CARGO) build --release --locked --lib
-
-textforge-c.pc: textforge-c.pc.in Cargo.toml
-	sed -e 's|@PREFIX@|$(PREFIX)|' -e 's|@LIBDIR@|$(LIBDIR)|' \
-	    -e 's|@INCLUDEDIR@|$(INCLUDEDIR)|' -e 's|@VERSION@|$(VERSION)|' $< > $@
-
-install: all textforge-c.pc
-	$(INSTALL) -d "$(DESTDIR)$(LIBDIR)" "$(DESTDIR)$(INCLUDEDIR)" "$(DESTDIR)$(PKGCONFIGDIR)"
-	$(INSTALL) -m 644 include/textforge.h "$(DESTDIR)$(INCLUDEDIR)/textforge.h"
-	$(INSTALL) -m 755 $(TARGET)/$(SHARED) "$(DESTDIR)$(LIBDIR)/$(SHARED).$(VERSION)"
-	ln -sf $(SHARED).$(VERSION) "$(DESTDIR)$(LIBDIR)/$(SHARED).$(ABI)"
-	ln -sf $(SHARED).$(ABI) "$(DESTDIR)$(LIBDIR)/$(SHARED)"
-	$(INSTALL) -m 644 $(TARGET)/$(STATIC) "$(DESTDIR)$(LIBDIR)/$(STATIC)"
-	$(INSTALL) -m 644 textforge-c.pc "$(DESTDIR)$(PKGCONFIGDIR)/textforge-c.pc"
+# The shared install runs last, so the CMake package selects the shared library.
+install: all
+	DESTDIR="$(DESTDIR)" $(CMAKE) --install "$(BUILD)/static"
+	DESTDIR="$(DESTDIR)" $(CMAKE) --install "$(BUILD)/shared"
 
 uninstall:
-	rm -f "$(DESTDIR)$(INCLUDEDIR)/textforge.h" "$(DESTDIR)$(PKGCONFIGDIR)/textforge-c.pc"
-	rm -f "$(DESTDIR)$(LIBDIR)/$(SHARED)" "$(DESTDIR)$(LIBDIR)/$(SHARED).$(ABI)" "$(DESTDIR)$(LIBDIR)/$(SHARED).$(VERSION)"
-	rm -f "$(DESTDIR)$(LIBDIR)/$(STATIC)"
+	for manifest in "$(BUILD)/static/install_manifest.txt" "$(BUILD)/shared/install_manifest.txt"; do \
+	    [ -f "$$manifest" ] && xargs -d '\n' rm -f < "$$manifest"; done; true
 
 check:
 	$(PYTHON) scripts/check.py
@@ -52,5 +37,4 @@ test:
 	$(PYTHON) scripts/run_c_tests.py
 
 clean:
-	$(CARGO) clean
-	rm -f textforge-c.pc
+	rm -rf "$(BUILD)"
