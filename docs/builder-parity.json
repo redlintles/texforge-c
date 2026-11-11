@@ -1,0 +1,875 @@
+{
+  "coreVersion": "0.2.0",
+  "apiSha256": "556a68c7d6c5081cf51bb08e3296211a31830e3dc3521028ef87181b44a0f43b",
+  "registrySha256": "ad1b705b07a1910150104f792fab983865ae6cc871df1efe37b40efb822c7d0a",
+  "methods": [
+    {
+      "rust": "TextForgeBuilderMethods::normalize_unicode",
+      "c": "tf_pipeline_normalize_unicode",
+      "mnemonic": "unorm",
+      "parameters": [
+        [
+          "mode",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::add_replace_rule",
+      "c": "tf_pipeline_add_replace_rule",
+      "mnemonic": "rmapd",
+      "parameters": [
+        [
+          "name",
+          "String"
+        ],
+        [
+          "pattern",
+          "String"
+        ],
+        [
+          "replacement",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::execute_replace_map",
+      "c": "tf_pipeline_execute_replace_map",
+      "mnemonic": "rmape",
+      "parameters": [
+        [
+          "name",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::append_line",
+      "c": "tf_pipeline_append_line",
+      "mnemonic": "apl",
+      "parameters": [
+        [
+          "text",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_line",
+      "c": "tf_pipeline_delete_line",
+      "mnemonic": "dln",
+      "parameters": [
+        [
+          "line",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_lines_after",
+      "c": "tf_pipeline_delete_lines_after",
+      "mnemonic": "dlna",
+      "parameters": [
+        [
+          "line",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_lines_before",
+      "c": "tf_pipeline_delete_lines_before",
+      "mnemonic": "dlnb",
+      "parameters": [
+        [
+          "line",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::select_lines",
+      "c": "tf_pipeline_select_lines",
+      "mnemonic": "slnc",
+      "parameters": [
+        [
+          "start_line",
+          "Usize"
+        ],
+        [
+          "end_line",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_lines_interval",
+      "c": "tf_pipeline_delete_lines_interval",
+      "mnemonic": "dlni",
+      "parameters": [
+        [
+          "start_line",
+          "Usize"
+        ],
+        [
+          "end_line",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::insert_line",
+      "c": "tf_pipeline_insert_line",
+      "mnemonic": "inl",
+      "parameters": [
+        [
+          "line",
+          "Usize"
+        ],
+        [
+          "text",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::remove_line_breaks",
+      "c": "tf_pipeline_remove_line_breaks",
+      "mnemonic": "nln",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::replace_line",
+      "c": "tf_pipeline_replace_line",
+      "mnemonic": "rln",
+      "parameters": [
+        [
+          "line",
+          "Usize"
+        ],
+        [
+          "text",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::prepend_line",
+      "c": "tf_pipeline_prepend_line",
+      "mnemonic": "pln",
+      "parameters": [
+        [
+          "text",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_empty_lines",
+      "c": "tf_pipeline_delete_empty_lines",
+      "mnemonic": "dle",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::keep_lines_matching",
+      "c": "tf_pipeline_keep_lines_matching",
+      "mnemonic": "klm",
+      "parameters": [
+        [
+          "pattern",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_lines_matching",
+      "c": "tf_pipeline_delete_lines_matching",
+      "mnemonic": "dlm",
+      "parameters": [
+        [
+          "pattern",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::reverse_lines",
+      "c": "tf_pipeline_reverse_lines",
+      "mnemonic": "revln",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::unique_lines",
+      "c": "tf_pipeline_unique_lines",
+      "mnemonic": "uniqln",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::join_lines",
+      "c": "tf_pipeline_join_lines",
+      "mnemonic": "joinln",
+      "parameters": [
+        [
+          "separator",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::trim_both_sides",
+      "c": "tf_pipeline_trim_both_sides",
+      "mnemonic": "tbs",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::trim_left_side",
+      "c": "tf_pipeline_trim_left_side",
+      "mnemonic": "tls",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::trim_right_side",
+      "c": "tf_pipeline_trim_right_side",
+      "mnemonic": "trs",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::add_to_end",
+      "c": "tf_pipeline_add_to_end",
+      "mnemonic": "ate",
+      "parameters": [
+        [
+          "text",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::add_to_beginning",
+      "c": "tf_pipeline_add_to_beginning",
+      "mnemonic": "atb",
+      "parameters": [
+        [
+          "text",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_first",
+      "c": "tf_pipeline_delete_first",
+      "mnemonic": "dlf",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_last",
+      "c": "tf_pipeline_delete_last",
+      "mnemonic": "dll",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_after",
+      "c": "tf_pipeline_delete_after",
+      "mnemonic": "dla",
+      "parameters": [
+        [
+          "index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_before",
+      "c": "tf_pipeline_delete_before",
+      "mnemonic": "dlb",
+      "parameters": [
+        [
+          "index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_chunk",
+      "c": "tf_pipeline_delete_chunk",
+      "mnemonic": "dlc",
+      "parameters": [
+        [
+          "start_index",
+          "Usize"
+        ],
+        [
+          "end_index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::replace_all_with",
+      "c": "tf_pipeline_replace_all_with",
+      "mnemonic": "raw",
+      "parameters": [
+        [
+          "pattern",
+          "String"
+        ],
+        [
+          "text_to_replace",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::replace_first_with",
+      "c": "tf_pipeline_replace_first_with",
+      "mnemonic": "rfw",
+      "parameters": [
+        [
+          "pattern",
+          "String"
+        ],
+        [
+          "text_to_replace",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::replace_last_with",
+      "c": "tf_pipeline_replace_last_with",
+      "mnemonic": "rlw",
+      "parameters": [
+        [
+          "pattern",
+          "String"
+        ],
+        [
+          "text_to_replace",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::replace_nth_with",
+      "c": "tf_pipeline_replace_nth_with",
+      "mnemonic": "rnw",
+      "parameters": [
+        [
+          "pattern",
+          "String"
+        ],
+        [
+          "text_to_replace",
+          "String"
+        ],
+        [
+          "index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::replace_count_with",
+      "c": "tf_pipeline_replace_count_with",
+      "mnemonic": "rcw",
+      "parameters": [
+        [
+          "pattern",
+          "String"
+        ],
+        [
+          "text_to_replace",
+          "String"
+        ],
+        [
+          "count",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::rotate_left",
+      "c": "tf_pipeline_rotate_left",
+      "mnemonic": "rtl",
+      "parameters": [
+        [
+          "times",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::rotate_right",
+      "c": "tf_pipeline_rotate_right",
+      "mnemonic": "rtr",
+      "parameters": [
+        [
+          "times",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::repeat",
+      "c": "tf_pipeline_repeat",
+      "mnemonic": "rpt",
+      "parameters": [
+        [
+          "times",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::select",
+      "c": "tf_pipeline_select",
+      "mnemonic": "slt",
+      "parameters": [
+        [
+          "start_index",
+          "Usize"
+        ],
+        [
+          "end_index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_uppercase_all",
+      "c": "tf_pipeline_to_uppercase_all",
+      "mnemonic": "tua",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_lowercase_all",
+      "c": "tf_pipeline_to_lowercase_all",
+      "mnemonic": "tla",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_uppercase_single",
+      "c": "tf_pipeline_to_uppercase_single",
+      "mnemonic": "tucs",
+      "parameters": [
+        [
+          "index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_lowercase_single",
+      "c": "tf_pipeline_to_lowercase_single",
+      "mnemonic": "tlcs",
+      "parameters": [
+        [
+          "index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_uppercase_chunk",
+      "c": "tf_pipeline_to_uppercase_chunk",
+      "mnemonic": "tucc",
+      "parameters": [
+        [
+          "start_index",
+          "Usize"
+        ],
+        [
+          "end_index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_lowercase_chunk",
+      "c": "tf_pipeline_to_lowercase_chunk",
+      "mnemonic": "tlcc",
+      "parameters": [
+        [
+          "start_index",
+          "Usize"
+        ],
+        [
+          "end_index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::capitalize_first_word",
+      "c": "tf_pipeline_capitalize_first_word",
+      "mnemonic": "cfw",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::capitalize_last_word",
+      "c": "tf_pipeline_capitalize_last_word",
+      "mnemonic": "clw",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::split_select",
+      "c": "tf_pipeline_split_select",
+      "mnemonic": "sslt",
+      "parameters": [
+        [
+          "pattern",
+          "String"
+        ],
+        [
+          "index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::capitalize_chunk",
+      "c": "tf_pipeline_capitalize_chunk",
+      "mnemonic": "ctc",
+      "parameters": [
+        [
+          "start_index",
+          "Usize"
+        ],
+        [
+          "end_index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::capitalize_range",
+      "c": "tf_pipeline_capitalize_range",
+      "mnemonic": "ctr",
+      "parameters": [
+        [
+          "start_index",
+          "Usize"
+        ],
+        [
+          "end_index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::capitalize_single_word",
+      "c": "tf_pipeline_capitalize_single_word",
+      "mnemonic": "cts",
+      "parameters": [
+        [
+          "index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_url_encoded",
+      "c": "tf_pipeline_to_url_encoded",
+      "mnemonic": "urle",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_url_decoded",
+      "c": "tf_pipeline_to_url_decoded",
+      "mnemonic": "urld",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_reverse",
+      "c": "tf_pipeline_to_reverse",
+      "mnemonic": "rev",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::split_characters",
+      "c": "tf_pipeline_split_characters",
+      "mnemonic": "splc",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_html_escaped",
+      "c": "tf_pipeline_to_html_escaped",
+      "mnemonic": "htmle",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_html_unescaped",
+      "c": "tf_pipeline_to_html_unescaped",
+      "mnemonic": "htmlu",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_json_escaped",
+      "c": "tf_pipeline_to_json_escaped",
+      "mnemonic": "jsone",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_json_unescaped",
+      "c": "tf_pipeline_to_json_unescaped",
+      "mnemonic": "jsonu",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::insert",
+      "c": "tf_pipeline_insert",
+      "mnemonic": "ins",
+      "parameters": [
+        [
+          "index",
+          "Usize"
+        ],
+        [
+          "text_to_insert",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_lowercase_word",
+      "c": "tf_pipeline_to_lowercase_word",
+      "mnemonic": "tlcw",
+      "parameters": [
+        [
+          "index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::to_uppercase_word",
+      "c": "tf_pipeline_to_uppercase_word",
+      "mnemonic": "tucw",
+      "parameters": [
+        [
+          "index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::join_to_kebab_case",
+      "c": "tf_pipeline_join_to_kebab_case",
+      "mnemonic": "jkbc",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::join_to_snake_case",
+      "c": "tf_pipeline_join_to_snake_case",
+      "mnemonic": "jsnc",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::join_to_camel_case",
+      "c": "tf_pipeline_join_to_camel_case",
+      "mnemonic": "jcmc",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::join_to_pascal_case",
+      "c": "tf_pipeline_join_to_pascal_case",
+      "mnemonic": "jpsc",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::pad_left",
+      "c": "tf_pipeline_pad_left",
+      "mnemonic": "padl",
+      "parameters": [
+        [
+          "text",
+          "String"
+        ],
+        [
+          "times",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::pad_right",
+      "c": "tf_pipeline_pad_right",
+      "mnemonic": "padr",
+      "parameters": [
+        [
+          "text",
+          "String"
+        ],
+        [
+          "times",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::remove_whitespace",
+      "c": "tf_pipeline_remove_whitespace",
+      "mnemonic": "rmws",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::delete_single",
+      "c": "tf_pipeline_delete_single",
+      "mnemonic": "dls",
+      "parameters": [
+        [
+          "index",
+          "Usize"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::extract_matches_joined",
+      "c": "tf_pipeline_extract_matches_joined",
+      "mnemonic": "emj",
+      "parameters": [
+        [
+          "pattern",
+          "String"
+        ],
+        [
+          "separator",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::val",
+      "c": "tf_pipeline_val",
+      "mnemonic": "val",
+      "parameters": [
+        [
+          "var_name",
+          "String"
+        ],
+        [
+          "var_value",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::var",
+      "c": "tf_pipeline_var",
+      "mnemonic": "var",
+      "parameters": [
+        [
+          "var_name",
+          "String"
+        ],
+        [
+          "var_value",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::mut_var",
+      "c": "tf_pipeline_mut_var",
+      "mnemonic": "mutv",
+      "parameters": [
+        [
+          "var_name",
+          "String"
+        ],
+        [
+          "var_value",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::eval",
+      "c": "tf_pipeline_eval",
+      "mnemonic": "eval",
+      "parameters": [
+        [
+          "expr",
+          "String"
+        ],
+        [
+          "var_name",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::iter",
+      "c": "tf_pipeline_iter",
+      "mnemonic": "iter",
+      "parameters": [
+        [
+          "times",
+          "Usize"
+        ],
+        [
+          "inner",
+          "Token"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::remove_pattern",
+      "c": "tf_pipeline_remove_pattern",
+      "mnemonic": "rmp",
+      "parameters": [
+        [
+          "pattern",
+          "String"
+        ]
+      ]
+    },
+    {
+      "rust": "TextForgeBuilderMethods::end",
+      "c": "tf_pipeline_end",
+      "mnemonic": "end",
+      "parameters": []
+    },
+    {
+      "rust": "TextForgeBuilderMethods::define_replace_map",
+      "c": "tf_pipeline_define_replace_map",
+      "portable": "PipelinePlan::define_replace_map"
+    },
+    {
+      "rust": "ReplaceMapBuilder::add_replace",
+      "c": "tf_replace_map_builder_add_replace",
+      "portable": "PipelinePlan::define_replace_map rules"
+    },
+    {
+      "rust": "ReplaceMapBuilder::end",
+      "c": "tf_pipeline_define_replace_map",
+      "portable": "implicit: passing the builder ends configuration"
+    },
+    {
+      "rust": "TextForgeBuilderMethods::push_token",
+      "c": "tf_pipeline_push_token",
+      "portable": "PipelinePlan::add"
+    },
+    {
+      "rust": "TextForgeBlockMethods::block_assoc",
+      "c": "tf_pipeline_block_assoc",
+      "portable": "PipelinePlan::block"
+    },
+    {
+      "rust": "TextForgeBlockMethods::call_block",
+      "c": "tf_pipeline_call_block",
+      "portable": "PipelinePlan::call_block"
+    },
+    {
+      "rust": "TextForgeConditionalMethods::if_do_contains_each",
+      "c": "tf_pipeline_if_do_contains_each",
+      "portable": "PipelinePlan::contains_each"
+    },
+    {
+      "rust": "TextForgeBuilder::build",
+      "c": "tf_pipeline_build",
+      "portable": "PortableProcessor::register"
+    }
+  ]
+}

@@ -2,11 +2,46 @@
 name = "textforge_c"
 version = "0.1.0"
 edition = "2024"
+description = "C ABI bindings for the TextForge text-processing DSL"
+license = "GPL-3.0-only"
+readme = "README.md"
+publish = false
+build = "build.rs"
+
+[lib]
+name = "textforge_c"
+# cdylib/staticlib are the C artifacts; rlib lets Rust integration tests call
+# the exact same `extern "C"` functions.
+crate-type = ["cdylib", "staticlib", "rlib"]
 
 [dependencies]
-
 textforge = { path = "vendor/textforge", version = "=0.2.0", features = [
   "bytecode",
   "watchers",
   "buffered",
 ] }
+
+[dev-dependencies]
+# Generates include/textforge.h; tests/header.rs fails when the committed header is stale.
+cbindgen = { version = "0.29.4", default-features = false }
+
+[features]
+# Test-only Rust oracle for parity fixtures; never enabled for distributed libraries.
+test-reference = ["textforge/test_access"]
+
+[[example]]
+name = "builder_reference"
+required-features = ["test-reference"]
+
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+missing_docs = "warn"
+
+[lints.clippy]
+unwrap_used = "deny"
+expect_used = "deny"
+panic = "deny"
+undocumented_unsafe_blocks = "deny"
+
+[workspace]
+exclude = ["vendor/textforge"]
