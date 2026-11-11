@@ -25,3 +25,15 @@ All notable changes to the TextForge C binding.
   an installed-package check with dynamic and static consumers.
 - Bundled core snapshot identical to the reviewed Node.js binding snapshot, with
   provenance verification.
+- CMake build (`CMakeLists.txt`) driving cargo, one linkage per build, with a
+  relocatable CMake package `textforge-c` (target `textforge-c::textforge-c`,
+  per-configuration locations), pkg-config module and Rust cross targets; the
+  Makefile now wraps it.
+- Reproducible offline source release (`scripts/make_source_release.py`) that
+  vendors every Rust crate.
+- Conan recipe in the ConanCenter layout and a vcpkg port with git-registry
+  metadata (`packaging/`), kept in sync by `scripts/update_recipes.py` and
+  verified by `scripts/check_packaging.py` and a CI job. ConanCenter and the
+  vcpkg curated registry do not currently accept Rust-built libraries; see
+  `docs/packaging.md`.
+- macOS shared libraries use `@rpath/libtextforge_c.dylib` as install name.

@@ -8,23 +8,31 @@ results and error codes as Rust.
 
 - **Version:** 0.1.0 (unreleased). **Core:** TextForge 0.2.0, reviewed snapshot (see [docs/core.md](docs/core.md)).
 - **Header:** [`include/textforge.h`](include/textforge.h), C11, usable from C++.
-- **Library:** `libtextforge_c` (shared, SONAME `libtextforge_c.so.0.1`, and static), pkg-config module `textforge-c`.
+- **Library:** `libtextforge_c` (shared, SONAME `libtextforge_c.so.0.1`, and static), CMake package and pkg-config module `textforge-c`.
 - **Supported platform:** Linux x86_64 with glibc ([compatibility matrix](docs/compatibility.md)).
 - **License:** GPL-3.0-only.
 
 ## Build and install
 
-Requires a stable Rust toolchain (edition 2024), a C compiler, `make` and `pkg-config`.
+Requires a stable Rust toolchain (edition 2024, `cargo` on `PATH`), CMake ≥ 3.21
+and a C compiler. CMake is the build system; it drives cargo and installs one
+linkage per build.
 
 ```sh
-make                                 # release shared + static libraries
-sudo make install                    # PREFIX=/usr/local by default
-make install DESTDIR=/tmp/pkg PREFIX=/usr   # staged install for packaging
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release [-DBUILD_SHARED_LIBS=ON]
+cmake --build build
+cmake --install build --prefix /usr/local
 ```
 
-`make install` puts `textforge.h` in `$(PREFIX)/include`, the libraries and
-the SONAME symlinks in `$(PREFIX)/lib`, and `textforge-c.pc` in
-`$(PREFIX)/lib/pkgconfig`. `make uninstall` removes them.
+The install contains `include/textforge.h`, the library (shared builds on Linux
+get the SONAME `libtextforge_c.so.0.1` and its symlinks), the CMake package
+`textforge-c` and the pkg-config module `textforge-c`. `make` / `make install`
+(`PREFIX`, `DESTDIR`) build and install both linkages through CMake.
+
+```cmake
+find_package(textforge-c CONFIG REQUIRED)
+target_link_libraries(app PRIVATE textforge-c::textforge-c)
+```
 
 ```sh
 cc -std=c11 app.c $(pkg-config --cflags --libs textforge-c) -o app
@@ -32,6 +40,15 @@ cc -std=c11 app.c $(pkg-config --cflags --libs textforge-c) -o app
 cc -std=c11 app.c $(pkg-config --cflags textforge-c) \
    -Wl,-Bstatic -ltextforge_c -Wl,-Bdynamic $(pkg-config --static --libs-only-l textforge-c | sed 's/-ltextforge_c//')
 ```
+
+### Package managers
+
+A Conan recipe (ConanCenter layout) and a vcpkg port with its registry
+metadata live in [`packaging/`](packaging). Both build from the offline source
+release, which vendors every Rust crate, so only `cargo` must be installed.
+ConanCenter currently rejects libraries that need a Rust toolchain and the
+vcpkg curated registry does not support one, so both are published through
+project-owned channels for now; see [docs/packaging.md](docs/packaging.md).
 
 ## Quick start
 
@@ -114,6 +131,7 @@ All work happens in this repository; the core is consumed only from
 ```sh
 python3 scripts/check.py          # everything below; run before each commit
 python3 scripts/check.py --quick  # without valgrind and the package check
+python3 scripts/check.py --packaging  # also Conan, vcpkg and the offline release
 ```
 
 | Command | Purpose |
@@ -126,7 +144,9 @@ python3 scripts/check.py --quick  # without valgrind and the package check
 | `python3 scripts/generate_processor_reference.py [--check]` | Rust processor/error oracle and its C table |
 | `python3 scripts/check_parity.py` | Every public Rust and portable entry point has a C function |
 | `python3 scripts/run_c_tests.py` | C suites and header examples: strict C11, plain, ASan/UBSan and valgrind |
-| `python3 scripts/check_distribution.py` | Clean source build, `make install`, installed layout, exports, dynamic/static consumers, suites against the installed library |
+| `python3 scripts/check_distribution.py` | Clean source build, `make install`, installed layout, exports, dynamic/static/CMake consumers, suites against the installed library |
+| `python3 scripts/check_packaging.py` | Offline source release, CMake build without network, `conan create` (static/shared), vcpkg overlay port and git registry (needs `conan` and `VCPKG_ROOT`) |
+| `python3 scripts/make_source_release.py [--update-recipes]` | Reproducible source archive with vendored crates; optionally points the recipes at it |
 
 Generated files (`src/builder.rs`, `include/textforge.h`, `tests/c/test_builder_parity.c`,
 `tests/c/processor_reference.h`, `tests/fixtures/*.json`, `docs/*-parity.json`)
@@ -135,5 +155,6 @@ must not be edited by hand.
 ## Status
 
 Feature-complete against the portable API of the bundled core, with no known
-parity gaps. Not yet published to any package registry; publishing needs
+parity gaps. Not yet released; the Conan recipe and vcpkg port are ready for
+project-owned channels ([docs/packaging.md](docs/packaging.md)). Publishing needs
 maintainer approval. See [Changelog.md](Changelog.md).

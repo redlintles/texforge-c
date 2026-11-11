@@ -4,8 +4,10 @@ Mirrors AGENTS.md section 14 for this crate, plus the binding checks required by
 section 17 (core provenance, generated-code freshness, parity, C tests under
 sanitizers/valgrind and the installed-package check).
 
-Usage: python3 scripts/check.py [--quick]
---quick skips valgrind and the distribution build (for fast local iteration).
+Usage: python3 scripts/check.py [--quick] [--packaging]
+--quick      skips valgrind and the distribution build (for fast local iteration).
+--packaging  also runs scripts/check_packaging.py (Conan, vcpkg, offline release);
+             required when CMake, build.rs, packaging/ or the release scripts change.
 """
 
 import subprocess
@@ -31,6 +33,8 @@ checks = [
 ]
 if not quick:
     checks.append([PY, "scripts/check_distribution.py"])
+if "--packaging" in sys.argv:
+    checks.append([PY, "scripts/check_packaging.py"])
 
 for command in checks:
     print("Running " + " ".join(command), flush=True)

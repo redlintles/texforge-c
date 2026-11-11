@@ -25,3 +25,50 @@ jobs:
         with:
           name: textforge-c-linux-x86_64
           path: dist/
+
+  packaging:
+    name: Packaging (offline release, Conan, vcpkg)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Install Conan, Ninja and vcpkg
+        run: |
+          sudo apt-get update && sudo apt-get install -y ninja-build pkg-config
+          pipx install conan
+          git clone --depth 1 https://github.com/microsoft/vcpkg.git "$RUNNER_TEMP/vcpkg"
+          "$RUNNER_TEMP/vcpkg/bootstrap-vcpkg.sh" -disableMetrics
+          echo "VCPKG_ROOT=$RUNNER_TEMP/vcpkg" >> "$GITHUB_ENV"
+      - name: Check recipes, port and source release
+        run: python3 scripts/check_packaging.py
+
+  cmake-experimental:
+    name: CMake build (${{ matrix.os }}, experimental)
+    runs-on: ${{ matrix.os }}
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-14, windows-2022]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Build, install and consume (static and shared, Debug and Release)
+        run: |
+          for shared in OFF ON; do
+            cmake -S . -B "build-$shared" -DBUILD_SHARED_LIBS=$shared -DCMAKE_INSTALL_PREFIX="$PWD/install-$shared"
+            cmake --build "build-$shared" --config Release
+            cmake --install "build-$shared" --config Release
+            for config in Debug Release; do
+              cmake -S tests/package -B "consumer-$shared-$config" -DCMAKE_PREFIX_PATH="$PWD/install-$shared" \
+                    -DCMAKE_BUILD_TYPE=$config
+              cmake --build "consumer-$shared-$config" --config $config
+              exe=$(find "consumer-$shared-$config" -name 'quickstart' -o -name 'quickstart.exe' | head -n 1)
+              PATH="$PWD/install-$shared/bin:$PATH" "$exe"
+            done
+          done
