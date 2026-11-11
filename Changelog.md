@@ -40,4 +40,8 @@ All notable changes to the TextForge C binding.
   `cmake --install --prefix <dir>` produces correct `-I`/`-L` flags even when
   the configure step used the default prefix; covered by
   `scripts/check_packaging.py`.
+- `scripts/benchmark.py` compares one pipeline covering every builder method
+  through the C library and the Rust crate; results in `docs/benchmark.md`
+  (same speed within noise; the only systematic cost is UTF-8 validation of
+  the input).
 - macOS shared libraries use `@rpath/libtextforge_c.dylib` as install name.

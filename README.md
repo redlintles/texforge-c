@@ -146,6 +146,7 @@ python3 scripts/check.py --packaging  # also Conan, vcpkg and the offline releas
 | `python3 scripts/run_c_tests.py` | C suites and header examples: strict C11, plain, ASan/UBSan and valgrind |
 | `python3 scripts/check_distribution.py` | Clean source build, `make install`, installed layout, exports, dynamic/static/CMake consumers, suites against the installed library |
 | `python3 scripts/check_packaging.py` | Offline source release, CMake build without network, `conan create` (static/shared), vcpkg overlay port and git registry (needs `conan` and `VCPKG_ROOT`) |
+| `python3 scripts/benchmark.py` | Same 84-step pipeline (all builder methods) through C and Rust on large inputs; results in [docs/benchmark.md](docs/benchmark.md) |
 | `python3 scripts/make_source_release.py [--update-recipes]` | Reproducible source archive with vendored crates; optionally points the recipes at it |
 
 Generated files (`src/builder.rs`, `include/textforge.h`, `tests/c/test_builder_parity.c`,
