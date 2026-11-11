@@ -1,0 +1,233 @@
+{
+  "core_revision": "c2ed4b8f4c96c9e3ddc53576a3cdbf6ccd38bc9e",
+  "cases": {
+    "unicode": {
+      "ok": "🍌é\u0000é"
+    },
+    "empty": {
+      "ok": "🍌é"
+    },
+    "missing_id": {
+      "error": {
+        "code": 3,
+        "stage": "execution",
+        "message": "Token array not found, is missing a valid identifier for this processor?",
+        "instruction": "get identifier",
+        "input": ""
+      }
+    },
+    "missing_snapshot": {
+      "error": {
+        "code": 3,
+        "stage": "execution",
+        "message": "Transform not found",
+        "instruction": "get_transform_vec",
+        "input": "missing"
+      }
+    },
+    "missing_remove": {
+      "error": {
+        "code": 2,
+        "stage": "execution",
+        "message": "Transformation not found",
+        "instruction": "remove_transform",
+        "input": "missing"
+      }
+    },
+    "missing_variable": {
+      "error": {
+        "code": 9,
+        "stage": "execution",
+        "message": "Variable not found",
+        "instruction": "get_var",
+        "input": "missing"
+      }
+    },
+    "invalid_regex": {
+      "error": {
+        "code": 17,
+        "stage": "execution",
+        "message": "Failed to create regex",
+        "instruction": "sslt",
+        "input": "["
+      }
+    },
+    "unknown": {
+      "error": {
+        "code": 2,
+        "stage": "conversion",
+        "message": "Token Not Found in mapping",
+        "instruction": "unknown",
+        "input": "portable instruction lookup"
+      }
+    },
+    "arity": {
+      "error": {
+        "code": 14,
+        "stage": "validation",
+        "message": "Parameter count mismatch",
+        "instruction": "atb",
+        "input": "expected=1, got=0"
+      }
+    },
+    "parameter_type": {
+      "error": {
+        "code": 23,
+        "stage": "validation",
+        "message": "Literal parameter type mismatch",
+        "instruction": "atb",
+        "input": "parameter=0, expected=String"
+      }
+    },
+    "persistence_missing": {
+      "error": {
+        "code": 3,
+        "stage": "persistence",
+        "message": "Token array not found, is missing a valid identifier for this processor?",
+        "instruction": "get identifier",
+        "input": ""
+      }
+    },
+    "text_roundtrip": {
+      "ok": "🍌xé"
+    },
+    "bytecode_roundtrip": {
+      "ok": "🍌xé"
+    },
+    "buffered": {
+      "ok": "🍌xé"
+    },
+    "watched": {
+      "ok": "🍌xé"
+    },
+    "report": {
+      "ok": "[\n  {\n    \"size\": \"2\"\n  },\n  {\n    \"size\": \"3\"\n  }\n]"
+    },
+    "callback_error": {
+      "error": {
+        "code": 27,
+        "stage": "callback",
+        "message": "Error: boom",
+        "instruction": "portable observer",
+        "input": "bad"
+      }
+    },
+    "builtin_error": {
+      "error": {
+        "code": 25,
+        "stage": "conversion",
+        "message": "Unknown builtin watcher",
+        "instruction": "Observers.set_builtin",
+        "input": "missing"
+      }
+    },
+    "invalid_utf8": {
+      "error": {
+        "code": 29,
+        "stage": "execution",
+        "message": "invalid utf-8 sequence of 1 bytes from index 0",
+        "instruction": "TextBuffer",
+        "input": "invalid UTF-8 document"
+      }
+    },
+    "line_append_line_multiline": {
+      "error": {
+        "code": 14,
+        "stage": "execution",
+        "message": "Expected a single line",
+        "instruction": "apl",
+        "input": "x\ny"
+      }
+    },
+    "line_prepend_line_multiline": {
+      "error": {
+        "code": 14,
+        "stage": "execution",
+        "message": "Expected a single line",
+        "instruction": "pln",
+        "input": "x\ny"
+      }
+    },
+    "line_insert_line_multiline": {
+      "error": {
+        "code": 14,
+        "stage": "execution",
+        "message": "Expected a single line",
+        "instruction": "inl",
+        "input": "x\ny"
+      }
+    },
+    "line_replace_line_multiline": {
+      "error": {
+        "code": 14,
+        "stage": "execution",
+        "message": "Expected a single line",
+        "instruction": "rln",
+        "input": "x\ny"
+      }
+    },
+    "line_keep_lines_matching_regex": {
+      "error": {
+        "code": 17,
+        "stage": "execution",
+        "message": "regex parse error:\n    [\n    ^\nerror: unclosed character class",
+        "instruction": "klm",
+        "input": "["
+      }
+    },
+    "line_delete_lines_matching_regex": {
+      "error": {
+        "code": 17,
+        "stage": "execution",
+        "message": "regex parse error:\n    [\n    ^\nerror: unclosed character class",
+        "instruction": "dlm",
+        "input": "["
+      }
+    },
+    "line_delete_line_zero": {
+      "error": {
+        "code": 14,
+        "stage": "execution",
+        "message": "Line numbers start at one",
+        "instruction": "dln",
+        "input": "0"
+      }
+    },
+    "line_delete_line_missing": {
+      "error": {
+        "code": 12,
+        "stage": "execution",
+        "message": "Line 100 does not exist; expected 1..=2",
+        "instruction": "dln",
+        "input": "a\nb"
+      }
+    },
+    "line_insert_line_zero": {
+      "error": {
+        "code": 14,
+        "stage": "execution",
+        "message": "Line numbers start at one",
+        "instruction": "inl",
+        "input": "0"
+      }
+    },
+    "line_select_lines_inverted": {
+      "error": {
+        "code": 14,
+        "stage": "execution",
+        "message": "Line range must be ascending",
+        "instruction": "slnc",
+        "input": "a\nb"
+      }
+    },
+    "line_delete_lines_interval_inverted": {
+      "error": {
+        "code": 14,
+        "stage": "execution",
+        "message": "Line range must be ascending",
+        "instruction": "dlni",
+        "input": "a\nb"
+      }
+    }
+  }
+}

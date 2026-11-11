@@ -33,6 +33,10 @@ test-reference = ["textforge/test_access"]
 name = "builder_reference"
 required-features = ["test-reference"]
 
+[[example]]
+name = "processor_reference"
+required-features = ["test-reference"]
+
 [lints.rust]
 unsafe_op_in_unsafe_fn = "deny"
 missing_docs = "warn"

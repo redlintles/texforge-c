@@ -1,0 +1,130 @@
+{
+  "coreVersion": "0.2.0",
+  "methods": [
+    {
+      "rust": "TextForgeProcessor::add_transform",
+      "portable": "PortableProcessor::add_transform",
+      "c": "tf_processor_add_transform"
+    },
+    {
+      "rust": "TextForgeProcessor::create_pipeline",
+      "portable": "PortableProcessor::create_pipeline",
+      "c": "tf_processor_create_pipeline"
+    },
+    {
+      "rust": "TextForgeProcessor::get_pipeline_from_file",
+      "portable": "PortableProcessor::get_pipeline_from_file",
+      "c": "tf_processor_get_pipeline_from_file"
+    },
+    {
+      "rust": "TextForgeProcessor::get_text_transform_vec",
+      "portable": "PortableProcessor::get_text_transform_vec",
+      "c": "tf_processor_get_text_transform_vec"
+    },
+    {
+      "rust": "TextForgeProcessor::get_transform_vec",
+      "portable": "PortableProcessor::get_transform_vec",
+      "c": "tf_processor_get_transform_vec"
+    },
+    {
+      "rust": "TextForgeProcessor::new",
+      "portable": "PortableProcessor::new",
+      "c": "tf_processor_new"
+    },
+    {
+      "rust": "TextForgeProcessor::process_all",
+      "portable": "PortableProcessor::process_all",
+      "c": "tf_processor_process_all"
+    },
+    {
+      "rust": "TextForgeProcessor::process_all_buffered",
+      "portable": "PortableProcessor::process_all_buffered",
+      "c": "tf_processor_process_all_buffered"
+    },
+    {
+      "rust": "TextForgeProcessor::process_all_with_debug",
+      "portable": "PortableProcessor::process_all_with_debug",
+      "c": "tf_processor_process_all_with_debug"
+    },
+    {
+      "rust": "TextForgeProcessor::process_all_with_watchers",
+      "portable": "PortableProcessor::process_all_with_watchers",
+      "c": "tf_processor_process_all_with_watchers"
+    },
+    {
+      "rust": "TextForgeProcessor::process_batch",
+      "portable": "PortableProcessor::process_batch",
+      "c": "tf_processor_process_batch"
+    },
+    {
+      "rust": "TextForgeProcessor::process_batch_buffered",
+      "portable": "PortableProcessor::process_batch_buffered",
+      "c": "tf_processor_process_batch_buffered"
+    },
+    {
+      "rust": "TextForgeProcessor::process_batch_in_pool",
+      "portable": "PortableProcessor::process_batch_in_pool",
+      "c": "tf_processor_process_batch_in_pool"
+    },
+    {
+      "rust": "TextForgeProcessor::process_file",
+      "portable": "PortableProcessor::process_file",
+      "c": "tf_processor_process_file"
+    },
+    {
+      "rust": "TextForgeProcessor::process_file_buffered",
+      "portable": "PortableProcessor::process_file_buffered",
+      "c": "tf_processor_process_file_buffered"
+    },
+    {
+      "rust": "TextForgeProcessor::process_single",
+      "portable": "PortableProcessor::process_single",
+      "c": "tf_processor_process_single"
+    },
+    {
+      "rust": "TextForgeProcessor::process_single_buffered",
+      "portable": "PortableProcessor::process_single_buffered",
+      "c": "tf_processor_process_single_buffered"
+    },
+    {
+      "rust": "TextForgeProcessor::process_single_with_debug",
+      "portable": "PortableProcessor::process_single_with_debug",
+      "c": "tf_processor_process_single_with_debug"
+    },
+    {
+      "rust": "TextForgeProcessor::read_from_bytecode_file",
+      "portable": "PortableProcessor::read_from_bytecode_file",
+      "c": "tf_processor_read_from_bytecode_file"
+    },
+    {
+      "rust": "TextForgeProcessor::remove_transform",
+      "portable": "PortableProcessor::remove_transform",
+      "c": "tf_processor_remove_transform"
+    },
+    {
+      "rust": "TextForgeProcessor::run_transform",
+      "portable": "PortableProcessor::run_transform",
+      "c": "tf_processor_run_transform"
+    },
+    {
+      "rust": "TextForgeProcessor::show_transforms",
+      "portable": "PortableProcessor::show_transforms",
+      "c": "tf_processor_show_transforms"
+    },
+    {
+      "rust": "TextForgeProcessor::transform_exists",
+      "portable": "PortableProcessor::transform_exists",
+      "c": "tf_processor_transform_exists"
+    },
+    {
+      "rust": "TextForgeProcessor::write_pipeline_to_file",
+      "portable": "PortableProcessor::write_pipeline_to_file",
+      "c": "tf_processor_write_pipeline_to_file"
+    },
+    {
+      "rust": "TextForgeProcessor::write_to_bytecode_file",
+      "portable": "PortableProcessor::write_to_bytecode_file",
+      "c": "tf_processor_write_to_bytecode_file"
+    }
+  ]
+}

@@ -1,0 +1,1366 @@
+[
+  {
+    "name": "normalize_unicode",
+    "input": "Ａﬁ²",
+    "steps": [
+      [
+        "normalize_unicode",
+        [
+          "nfkc"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "Afi2"
+    }
+  },
+  {
+    "name": "add_replace_rule",
+    "input": "cat",
+    "steps": [
+      [
+        "add_replace_rule",
+        [
+          "animals",
+          "cat",
+          "dog"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "cat"
+    }
+  },
+  {
+    "name": "execute_replace_map",
+    "input": "cat",
+    "steps": [
+      [
+        "add_replace_rule",
+        [
+          "animals",
+          "cat",
+          "dog"
+        ]
+      ],
+      [
+        "execute_replace_map",
+        [
+          "animals"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "dog"
+    }
+  },
+  {
+    "name": "append_line",
+    "input": "a",
+    "steps": [
+      [
+        "append_line",
+        [
+          "b"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\nb"
+    }
+  },
+  {
+    "name": "delete_line",
+    "input": "a\nb",
+    "steps": [
+      [
+        "delete_line",
+        [
+          1
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "b"
+    }
+  },
+  {
+    "name": "delete_lines_after",
+    "input": "a\nb",
+    "steps": [
+      [
+        "delete_lines_after",
+        [
+          1
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\n"
+    }
+  },
+  {
+    "name": "delete_lines_before",
+    "input": "a\nb",
+    "steps": [
+      [
+        "delete_lines_before",
+        [
+          2
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "b"
+    }
+  },
+  {
+    "name": "select_lines",
+    "input": "a\nb\nc",
+    "steps": [
+      [
+        "select_lines",
+        [
+          2,
+          2
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "b\n"
+    }
+  },
+  {
+    "name": "delete_lines_interval",
+    "input": "a\nb\nc",
+    "steps": [
+      [
+        "delete_lines_interval",
+        [
+          2,
+          2
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\nc"
+    }
+  },
+  {
+    "name": "insert_line",
+    "input": "a\nb",
+    "steps": [
+      [
+        "insert_line",
+        [
+          2,
+          "x"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\nx\nb"
+    }
+  },
+  {
+    "name": "remove_line_breaks",
+    "input": "a\nb",
+    "steps": [
+      [
+        "remove_line_breaks",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "ab"
+    }
+  },
+  {
+    "name": "replace_line",
+    "input": "a\nb",
+    "steps": [
+      [
+        "replace_line",
+        [
+          2,
+          "x"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\nx"
+    }
+  },
+  {
+    "name": "prepend_line",
+    "input": "a",
+    "steps": [
+      [
+        "prepend_line",
+        [
+          "b"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "b\na"
+    }
+  },
+  {
+    "name": "delete_empty_lines",
+    "input": "a\n\nb",
+    "steps": [
+      [
+        "delete_empty_lines",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "a\nb"
+    }
+  },
+  {
+    "name": "keep_lines_matching",
+    "input": "a\nb",
+    "steps": [
+      [
+        "keep_lines_matching",
+        [
+          "^b$"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "b"
+    }
+  },
+  {
+    "name": "delete_lines_matching",
+    "input": "a\nb",
+    "steps": [
+      [
+        "delete_lines_matching",
+        [
+          "^b$"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a\n"
+    }
+  },
+  {
+    "name": "reverse_lines",
+    "input": "a\nb",
+    "steps": [
+      [
+        "reverse_lines",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "b\na"
+    }
+  },
+  {
+    "name": "unique_lines",
+    "input": "a\na\nb",
+    "steps": [
+      [
+        "unique_lines",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "a\nb"
+    }
+  },
+  {
+    "name": "join_lines",
+    "input": "a\nb",
+    "steps": [
+      [
+        "join_lines",
+        [
+          " "
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a b"
+    }
+  },
+  {
+    "name": "trim_both_sides",
+    "input": "   banana   ",
+    "steps": [
+      [
+        "trim_both_sides",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "banana"
+    }
+  },
+  {
+    "name": "trim_left_side",
+    "input": "   banana  ",
+    "steps": [
+      [
+        "trim_left_side",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "banana  "
+    }
+  },
+  {
+    "name": "trim_right_side",
+    "input": "  banana   ",
+    "steps": [
+      [
+        "trim_right_side",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "  banana"
+    }
+  },
+  {
+    "name": "add_to_end",
+    "input": "banana",
+    "steps": [
+      [
+        "add_to_end",
+        [
+          "!"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "banana!"
+    }
+  },
+  {
+    "name": "add_to_beginning",
+    "input": "banana",
+    "steps": [
+      [
+        "add_to_beginning",
+        [
+          "x"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "xbanana"
+    }
+  },
+  {
+    "name": "delete_first",
+    "input": "banana",
+    "steps": [
+      [
+        "delete_first",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "anana"
+    }
+  },
+  {
+    "name": "delete_last",
+    "input": "banana",
+    "steps": [
+      [
+        "delete_last",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "banan"
+    }
+  },
+  {
+    "name": "delete_after",
+    "input": "banana",
+    "steps": [
+      [
+        "delete_after",
+        [
+          2
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "ban"
+    }
+  },
+  {
+    "name": "delete_before",
+    "input": "banana",
+    "steps": [
+      [
+        "delete_before",
+        [
+          3
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "ana"
+    }
+  },
+  {
+    "name": "delete_chunk",
+    "input": "banana",
+    "steps": [
+      [
+        "delete_chunk",
+        [
+          1,
+          3
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "bna"
+    }
+  },
+  {
+    "name": "replace_all_with",
+    "input": "banana",
+    "steps": [
+      [
+        "replace_all_with",
+        [
+          "a",
+          "x"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "bxnxnx"
+    }
+  },
+  {
+    "name": "replace_first_with",
+    "input": "banana",
+    "steps": [
+      [
+        "replace_first_with",
+        [
+          "a",
+          "x"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "bxnana"
+    }
+  },
+  {
+    "name": "replace_last_with",
+    "input": "banana",
+    "steps": [
+      [
+        "replace_last_with",
+        [
+          "a",
+          "x"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "bananx"
+    }
+  },
+  {
+    "name": "replace_nth_with",
+    "input": "banana",
+    "steps": [
+      [
+        "replace_nth_with",
+        [
+          "a",
+          "x",
+          1
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "banxna"
+    }
+  },
+  {
+    "name": "replace_count_with",
+    "input": "banana",
+    "steps": [
+      [
+        "replace_count_with",
+        [
+          "a",
+          "x",
+          2
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "bxnxna"
+    }
+  },
+  {
+    "name": "rotate_left",
+    "input": "abcd",
+    "steps": [
+      [
+        "rotate_left",
+        [
+          2
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "cdab"
+    }
+  },
+  {
+    "name": "rotate_right",
+    "input": "abcd",
+    "steps": [
+      [
+        "rotate_right",
+        [
+          1
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "dabc"
+    }
+  },
+  {
+    "name": "repeat",
+    "input": "hi",
+    "steps": [
+      [
+        "repeat",
+        [
+          3
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "hihihi"
+    }
+  },
+  {
+    "name": "select",
+    "input": "abcdef",
+    "steps": [
+      [
+        "select",
+        [
+          1,
+          3
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "bcd"
+    }
+  },
+  {
+    "name": "to_uppercase_all",
+    "input": "banana",
+    "steps": [
+      [
+        "to_uppercase_all",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "BANANA"
+    }
+  },
+  {
+    "name": "to_lowercase_all",
+    "input": "BaNaNa",
+    "steps": [
+      [
+        "to_lowercase_all",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "banana"
+    }
+  },
+  {
+    "name": "to_uppercase_single",
+    "input": "banana",
+    "steps": [
+      [
+        "to_uppercase_single",
+        [
+          1
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "bAnana"
+    }
+  },
+  {
+    "name": "to_lowercase_single",
+    "input": "Banana",
+    "steps": [
+      [
+        "to_lowercase_single",
+        [
+          0
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "banana"
+    }
+  },
+  {
+    "name": "to_uppercase_chunk",
+    "input": "abcdef",
+    "steps": [
+      [
+        "to_uppercase_chunk",
+        [
+          1,
+          3
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "aBCDef"
+    }
+  },
+  {
+    "name": "to_lowercase_chunk",
+    "input": "ABCD EF",
+    "steps": [
+      [
+        "to_lowercase_chunk",
+        [
+          2,
+          5
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "ABcd eF"
+    }
+  },
+  {
+    "name": "capitalize_first_word",
+    "input": "hello world",
+    "steps": [
+      [
+        "capitalize_first_word",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "Hello world"
+    }
+  },
+  {
+    "name": "capitalize_last_word",
+    "input": "hello world",
+    "steps": [
+      [
+        "capitalize_last_word",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "hello World"
+    }
+  },
+  {
+    "name": "split_select",
+    "input": "aa-bb-cc",
+    "steps": [
+      [
+        "split_select",
+        [
+          "-",
+          1
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "bb"
+    }
+  },
+  {
+    "name": "capitalize_chunk",
+    "input": "hello brave world",
+    "steps": [
+      [
+        "capitalize_chunk",
+        [
+          6,
+          16
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "hello Brave World"
+    }
+  },
+  {
+    "name": "capitalize_range",
+    "input": "foo bar mar jar tar rar",
+    "steps": [
+      [
+        "capitalize_range",
+        [
+          1,
+          4
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "foo Bar Mar Jar Tar rar"
+    }
+  },
+  {
+    "name": "capitalize_single_word",
+    "input": "hello brave world",
+    "steps": [
+      [
+        "capitalize_single_word",
+        [
+          2
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "hello brave World"
+    }
+  },
+  {
+    "name": "to_url_encoded",
+    "input": "hello world!",
+    "steps": [
+      [
+        "to_url_encoded",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "hello%20world%21"
+    }
+  },
+  {
+    "name": "to_url_decoded",
+    "input": "hello%20world%21",
+    "steps": [
+      [
+        "to_url_decoded",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "hello world!"
+    }
+  },
+  {
+    "name": "to_reverse",
+    "input": "abc",
+    "steps": [
+      [
+        "to_reverse",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "cba"
+    }
+  },
+  {
+    "name": "split_characters",
+    "input": "hello",
+    "steps": [
+      [
+        "split_characters",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "h e l l o"
+    }
+  },
+  {
+    "name": "to_html_escaped",
+    "input": "<b>Hello</b>",
+    "steps": [
+      [
+        "to_html_escaped",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "&lt;b&gt;Hello&lt;&#x2F;b&gt;"
+    }
+  },
+  {
+    "name": "to_html_unescaped",
+    "input": "&lt;b&gt;Hi&lt;/b&gt;",
+    "steps": [
+      [
+        "to_html_unescaped",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "<b>Hi</b>"
+    }
+  },
+  {
+    "name": "to_json_escaped",
+    "input": "{banana: '10'}",
+    "steps": [
+      [
+        "to_json_escaped",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "\"{banana: '10'}\""
+    }
+  },
+  {
+    "name": "to_json_unescaped",
+    "input": "\"{banana: '10'}\"",
+    "steps": [
+      [
+        "to_json_unescaped",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "{banana: '10'}"
+    }
+  },
+  {
+    "name": "insert",
+    "input": "banana",
+    "steps": [
+      [
+        "insert",
+        [
+          1,
+          " laranja"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "ba laranjanana"
+    }
+  },
+  {
+    "name": "to_lowercase_word",
+    "input": "BANANA LARANJA CHEIA DE CANJA",
+    "steps": [
+      [
+        "to_lowercase_word",
+        [
+          1
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "BANANA laranja CHEIA DE CANJA"
+    }
+  },
+  {
+    "name": "to_uppercase_word",
+    "input": "banana laranja cheia de canja",
+    "steps": [
+      [
+        "to_uppercase_word",
+        [
+          1
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "banana LARANJA cheia de canja"
+    }
+  },
+  {
+    "name": "join_to_kebab_case",
+    "input": "banana laranja cheia de canja",
+    "steps": [
+      [
+        "join_to_kebab_case",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "banana-laranja-cheia-de-canja"
+    }
+  },
+  {
+    "name": "join_to_snake_case",
+    "input": "banana laranja cheia de canja",
+    "steps": [
+      [
+        "join_to_snake_case",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "banana_laranja_cheia_de_canja"
+    }
+  },
+  {
+    "name": "join_to_camel_case",
+    "input": "banana laranja cheia de canja",
+    "steps": [
+      [
+        "join_to_camel_case",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "bananaLaranjaCheiaDeCanja"
+    }
+  },
+  {
+    "name": "join_to_pascal_case",
+    "input": "banana laranja cheia de canja",
+    "steps": [
+      [
+        "join_to_pascal_case",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "BananaLaranjaCheiaDeCanja"
+    }
+  },
+  {
+    "name": "pad_left",
+    "input": "banana",
+    "steps": [
+      [
+        "pad_left",
+        [
+          "x",
+          7
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "xbanana"
+    }
+  },
+  {
+    "name": "pad_right",
+    "input": "banana",
+    "steps": [
+      [
+        "pad_right",
+        [
+          "x",
+          7
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "bananax"
+    }
+  },
+  {
+    "name": "remove_whitespace",
+    "input": "banana laranja cheia de canja",
+    "steps": [
+      [
+        "remove_whitespace",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "bananalaranjacheiadecanja"
+    }
+  },
+  {
+    "name": "delete_single",
+    "input": "banana",
+    "steps": [
+      [
+        "delete_single",
+        [
+          3
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "banna"
+    }
+  },
+  {
+    "name": "extract_matches_joined",
+    "input": "banana",
+    "steps": [
+      [
+        "extract_matches_joined",
+        [
+          "a",
+          ","
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "a,a,a"
+    }
+  },
+  {
+    "name": "val",
+    "input": "é",
+    "steps": [
+      [
+        "val",
+        [
+          "n",
+          2
+        ]
+      ],
+      [
+        "repeat",
+        [
+          {
+            "variable": "n"
+          }
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "éé"
+    }
+  },
+  {
+    "name": "var",
+    "input": "é",
+    "steps": [
+      [
+        "var",
+        [
+          "n",
+          2
+        ]
+      ],
+      [
+        "repeat",
+        [
+          {
+            "variable": "n"
+          }
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "éé"
+    }
+  },
+  {
+    "name": "mut_var",
+    "input": "é",
+    "steps": [
+      [
+        "var",
+        [
+          "n",
+          1
+        ]
+      ],
+      [
+        "mut_var",
+        [
+          "n",
+          2
+        ]
+      ],
+      [
+        "repeat",
+        [
+          {
+            "variable": "n"
+          }
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "éé"
+    }
+  },
+  {
+    "name": "eval",
+    "input": "é",
+    "steps": [
+      [
+        "eval",
+        [
+          "2 + 3",
+          "n"
+        ]
+      ],
+      [
+        "repeat",
+        [
+          {
+            "variable": "n"
+          }
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "ééééé"
+    }
+  },
+  {
+    "name": "iter",
+    "input": "é",
+    "steps": [
+      [
+        "iter",
+        [
+          2,
+          {
+            "instruction": [
+              "add_to_beginning",
+              [
+                "🍌"
+              ]
+            ]
+          }
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "🍌🍌é"
+    }
+  },
+  {
+    "name": "remove_pattern",
+    "input": "bánáná🍌",
+    "steps": [
+      [
+        "remove_pattern",
+        [
+          "á"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "bnn🍌"
+    }
+  },
+  {
+    "name": "end",
+    "input": "é",
+    "steps": [
+      [
+        "end",
+        []
+      ]
+    ],
+    "result": {
+      "ok": "é"
+    }
+  },
+  {
+    "name": "block_assoc",
+    "input": "é",
+    "steps": [
+      [
+        "block_assoc",
+        [
+          "suffix",
+          {
+            "body": [
+              [
+                "add_to_end",
+                [
+                  "!"
+                ]
+              ]
+            ]
+          }
+        ]
+      ],
+      [
+        "call_block",
+        [
+          "suffix"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "é!"
+    }
+  },
+  {
+    "name": "call_block",
+    "input": "é",
+    "steps": [
+      [
+        "block_assoc",
+        [
+          "suffix",
+          {
+            "body": [
+              [
+                "add_to_end",
+                [
+                  "!"
+                ]
+              ]
+            ]
+          }
+        ]
+      ],
+      [
+        "call_block",
+        [
+          "suffix"
+        ]
+      ],
+      [
+        "call_block",
+        [
+          "suffix"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "é!!"
+    }
+  },
+  {
+    "name": "if_do_contains_each",
+    "input": "x",
+    "steps": [
+      [
+        "if_do_contains_each",
+        [
+          "x",
+          {
+            "body": [
+              [
+                "remove_pattern",
+                [
+                  "x"
+                ]
+              ],
+              [
+                "add_to_end",
+                [
+                  "skipped"
+                ]
+              ]
+            ]
+          }
+        ]
+      ]
+    ],
+    "result": {
+      "ok": ""
+    }
+  },
+  {
+    "name": "define_replace_map",
+    "input": "cat wolf",
+    "steps": [
+      [
+        "define_replace_map",
+        [
+          "animals",
+          {
+            "map": [
+              [
+                "cat",
+                "wolf"
+              ],
+              [
+                "wolf",
+                "dog"
+              ]
+            ]
+          }
+        ]
+      ],
+      [
+        "execute_replace_map",
+        [
+          "animals"
+        ]
+      ]
+    ],
+    "result": {
+      "ok": "wolf dog"
+    }
+  },
+  {
+    "name": "undefined_variable",
+    "input": "é",
+    "steps": [
+      [
+        "repeat",
+        [
+          {
+            "variable": "missing"
+          }
+        ]
+      ]
+    ],
+    "result": {
+      "error": 9
+    }
+  },
+  {
+    "name": "invalid_regex",
+    "input": "abc",
+    "steps": [
+      [
+        "replace_all_with",
+        [
+          "(",
+          "x"
+        ]
+      ]
+    ],
+    "result": {
+      "error": 17
+    }
+  },
+  {
+    "name": "missing_block",
+    "input": "é",
+    "steps": [
+      [
+        "call_block",
+        [
+          "nowhere"
+        ]
+      ]
+    ],
+    "result": {
+      "error": 8
+    }
+  }
+]
