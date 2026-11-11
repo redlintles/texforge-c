@@ -1,0 +1,7 @@
+{
+  "name": "textforge-c",
+  "homepage": "https://github.com/redlintles/textforge-c",
+  "url": "https://github.com/redlintles/textforge-c/releases/download/v{version}/textforge-c-{version}.tar.gz",
+  "license": "GPL-3.0-only",
+  "description": "C bindings for the TextForge text-processing DSL"
+}

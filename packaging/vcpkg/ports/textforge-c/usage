@@ -1,0 +1,14 @@
+textforge-c provides CMake targets:
+
+  find_package(textforge-c CONFIG REQUIRED)
+  target_link_libraries(main PRIVATE textforge-c::textforge-c)
+
+textforge-c provides pkg-config modules:
+
+  # C bindings for the TextForge text-processing DSL
+  textforge-c
+
+Building this port requires cargo from a stable Rust toolchain (https://rustup.rs)
+on the build machine, plus the Rust standard library for the target when cross
+building (rustup target add <triple>). No network access is needed: the source
+archive contains every Rust dependency.
