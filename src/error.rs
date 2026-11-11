@@ -237,7 +237,10 @@ pub unsafe extern "C" fn tf_error_code(error: *const TfError) -> u16 {
 ///
 /// `error` is NULL or a live error; `length` is NULL or writable.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn tf_error_message(error: *const TfError, length: *mut usize) -> *const c_char {
+pub unsafe extern "C" fn tf_error_message(
+    error: *const TfError,
+    length: *mut usize,
+) -> *const c_char {
     field(error, length, |e| &e.message)
 }
 
@@ -260,7 +263,10 @@ pub unsafe extern "C" fn tf_error_instruction(
 ///
 /// `error` is NULL or a live error; `length` is NULL or writable.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn tf_error_input(error: *const TfError, length: *mut usize) -> *const c_char {
+pub unsafe extern "C" fn tf_error_input(
+    error: *const TfError,
+    length: *mut usize,
+) -> *const c_char {
     field(error, length, |e| &e.input)
 }
 

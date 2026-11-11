@@ -121,7 +121,9 @@ pub unsafe extern "C" fn tf_processor_free(processor: *mut TfProcessor) {
 ///
 /// `processor` is NULL or live.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn tf_processor_create_pipeline(processor: *const TfProcessor) -> *mut TfPipeline {
+pub unsafe extern "C" fn tf_processor_create_pipeline(
+    processor: *const TfProcessor,
+) -> *mut TfPipeline {
     if processor.is_null() {
         return ptr::null_mut();
     }
@@ -237,7 +239,9 @@ pub unsafe extern "C" fn tf_processor_list_transforms(
     unsafe {
         ffi::call(error, || {
             let ids = Out::new(ids, "ids")?;
-            ids.write(TfStringList::from(borrow(processor)?.inner.lock()?.list_transforms()));
+            ids.write(TfStringList::from(
+                borrow(processor)?.inner.lock()?.list_transforms(),
+            ));
             Ok(())
         })
     }
@@ -280,7 +284,10 @@ pub unsafe extern "C" fn tf_processor_get_transform_vec(
     unsafe {
         ffi::call(error, || {
             let instructions = Out::new(instructions, "instructions")?;
-            let specs = borrow(processor)?.inner.lock()?.get_transform_vec(self::id(id, length)?)?;
+            let specs = borrow(processor)?
+                .inner
+                .lock()?
+                .get_transform_vec(self::id(id, length)?)?;
             let items = specs
                 .into_iter()
                 .map(TfInstruction::from_spec)
@@ -309,7 +316,10 @@ pub unsafe extern "C" fn tf_processor_get_text_transform_vec(
     unsafe {
         ffi::call(error, || {
             let lines = Out::new(lines, "lines")?;
-            let text = borrow(processor)?.inner.lock()?.get_text_transform_vec(self::id(id, length)?)?;
+            let text = borrow(processor)?
+                .inner
+                .lock()?
+                .get_text_transform_vec(self::id(id, length)?)?;
             lines.write(TfStringList::from(text));
             Ok(())
         })
@@ -379,7 +389,8 @@ pub unsafe extern "C" fn tf_processor_write_pipeline_to_file(
     // SAFETY: forwarded caller contract.
     unsafe {
         unit_result(processor, error, |processor| {
-            Ok(processor.write_pipeline_to_file(self::id(id, length)?, path::borrow(path, "path")?)?)
+            Ok(processor
+                .write_pipeline_to_file(self::id(id, length)?, path::borrow(path, "path")?)?)
         })
     }
 }
@@ -423,7 +434,8 @@ pub unsafe extern "C" fn tf_processor_write_to_bytecode_file(
     // SAFETY: forwarded caller contract.
     unsafe {
         unit_result(processor, error, |processor| {
-            Ok(processor.write_to_bytecode_file(self::id(id, length)?, path::borrow(path, "path")?)?)
+            Ok(processor
+                .write_to_bytecode_file(self::id(id, length)?, path::borrow(path, "path")?)?)
         })
     }
 }
@@ -447,7 +459,10 @@ pub unsafe extern "C" fn tf_processor_run_transform(
     // SAFETY: forwarded caller contract.
     unsafe {
         text_result(processor, out, error, |processor| {
-            Ok(processor.run_transform(self::id(id, id_length)?, ffi::text(input, input_length, "input")?)?)
+            Ok(processor.run_transform(
+                self::id(id, id_length)?,
+                ffi::text(input, input_length, "input")?,
+            )?)
         })
     }
 }
@@ -470,7 +485,10 @@ pub unsafe extern "C" fn tf_processor_process_all(
     // SAFETY: forwarded caller contract.
     unsafe {
         text_result(processor, out, error, |processor| {
-            Ok(processor.process_all(self::id(id, id_length)?, ffi::text(input, input_length, "input")?)?)
+            Ok(processor.process_all(
+                self::id(id, id_length)?,
+                ffi::text(input, input_length, "input")?,
+            )?)
         })
     }
 }
@@ -617,7 +635,10 @@ unsafe fn file_tasks(tasks: *const TfFileTask, count: usize) -> Result<Vec<FileT
 /// # Safety
 ///
 /// `results` is valid for writing `outcomes.len()` pointers.
-unsafe fn store_outcomes(results: *mut *mut TfError, outcomes: Vec<Result<(), textforge::api::portable::BindingError>>) {
+unsafe fn store_outcomes(
+    results: *mut *mut TfError,
+    outcomes: Vec<Result<(), textforge::api::portable::BindingError>>,
+) {
     for (index, outcome) in outcomes.into_iter().enumerate() {
         let value = match outcome {
             Ok(()) => ptr::null_mut(),

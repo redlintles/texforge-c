@@ -131,7 +131,10 @@ pub(crate) unsafe fn array<'a, T>(
     if data.is_null() {
         return Err(Failure::null(what));
     }
-    if length.checked_mul(size_of::<T>()).is_none_or(|n| n > isize::MAX as usize) {
+    if length
+        .checked_mul(size_of::<T>())
+        .is_none_or(|n| n > isize::MAX as usize)
+    {
         return Err(Failure::invalid(format!("{what} length is too large")));
     }
     // SAFETY: non-NULL, size checked, and valid for `length` elements by contract.
@@ -160,7 +163,9 @@ impl<T> Out<T> {
     /// `slot` is NULL or valid for writing one `T`. The previous contents are
     /// overwritten without being dropped or freed.
     pub(crate) unsafe fn new(slot: *mut T, what: &str) -> Result<Self, Failure> {
-        NonNull::new(slot).map(Self).ok_or_else(|| Failure::null(what))
+        NonNull::new(slot)
+            .map(Self)
+            .ok_or_else(|| Failure::null(what))
     }
 
     /// Store the result.

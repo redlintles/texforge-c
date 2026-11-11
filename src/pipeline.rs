@@ -162,7 +162,9 @@ unsafe fn group(
     apply: impl FnOnce(&mut PipelinePlan, PipelinePlan) -> Result<(), Failure>,
 ) -> *mut TfPipeline {
     // SAFETY: forwarded caller contract.
-    let body = ffi::guard(Err(Failure::panic()), || unsafe { take_body(pipeline, body) });
+    let body = ffi::guard(Err(Failure::panic()), || unsafe {
+        take_body(pipeline, body)
+    });
     // SAFETY: forwarded caller contract.
     unsafe { step(pipeline, |plan| apply(plan, body?)) }
 }
@@ -470,7 +472,10 @@ pub unsafe extern "C" fn tf_pipeline_define_replace_map(
     // SAFETY: forwarded caller contract.
     unsafe {
         step(pipeline, |plan| {
-            let state = map.ok_or_else(|| Failure::null("map"))?.state.into_inner()?;
+            let state = map
+                .ok_or_else(|| Failure::null("map"))?
+                .state
+                .into_inner()?;
             if let Some(error) = state.error {
                 return Err(error);
             }
@@ -537,7 +542,8 @@ pub unsafe extern "C" fn tf_pipeline_compile(
     unsafe {
         ffi::call(error, || {
             let out = Out::new(out, "out")?;
-            let compiled = ffi::handle(pipeline, "pipeline")?.with_plan(|plan| Ok(plan.compile()?))?;
+            let compiled =
+                ffi::handle(pipeline, "pipeline")?.with_plan(|plan| Ok(plan.compile()?))?;
             out.write(ffi::into_handle(TfCompiledPipeline { inner: compiled }));
             Ok(())
         })

@@ -41,7 +41,10 @@ fn publish(out: Out<*mut TfFilePath>, inner: FilePath) {
 /// # Safety
 ///
 /// `path` is NULL or a live path.
-pub(crate) unsafe fn borrow<'a>(path: *const TfFilePath, what: &str) -> Result<&'a FilePath, Failure> {
+pub(crate) unsafe fn borrow<'a>(
+    path: *const TfFilePath,
+    what: &str,
+) -> Result<&'a FilePath, Failure> {
     // SAFETY: forwarded caller contract.
     Ok(&unsafe { ffi::handle(path, what) }?.inner)
 }
@@ -63,7 +66,10 @@ pub unsafe extern "C" fn tf_file_path_from_text(
     unsafe {
         ffi::call(error, || {
             let out = Out::new(out, "out")?;
-            publish(out, FilePath::from_text(ffi::text(text, length, "path")?.into()));
+            publish(
+                out,
+                FilePath::from_text(ffi::text(text, length, "path")?.into()),
+            );
             Ok(())
         })
     }

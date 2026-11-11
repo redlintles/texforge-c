@@ -8,7 +8,9 @@ use crate::{
     text::{TfBytes, TfString},
 };
 use std::ffi::{c_char, c_int, c_void};
-use textforge::api::portable::{BufferOptions, BufferTask, FilePath, PortableBuffer, StreamReader, StreamWriter};
+use textforge::api::portable::{
+    BufferOptions, BufferTask, FilePath, PortableBuffer, StreamReader, StreamWriter,
+};
 
 /// Default in-memory size (8 MiB) before a buffer spills to a temporary file.
 pub const TF_DEFAULT_MEMORY_THRESHOLD: u64 = 8 * 1024 * 1024;
@@ -65,12 +67,16 @@ fn temporary_directory() -> Result<FilePath, Failure> {
     #[cfg(unix)]
     {
         use std::os::unix::ffi::OsStrExt;
-        Ok(FilePath::from_native_bytes(directory.as_os_str().as_bytes().to_vec())?)
+        Ok(FilePath::from_native_bytes(
+            directory.as_os_str().as_bytes().to_vec(),
+        )?)
     }
     #[cfg(windows)]
     {
         use std::os::windows::ffi::OsStrExt;
-        Ok(FilePath::from_windows_wide(directory.as_os_str().encode_wide().collect())?)
+        Ok(FilePath::from_windows_wide(
+            directory.as_os_str().encode_wide().collect(),
+        )?)
     }
     #[cfg(not(any(unix, windows)))]
     {
@@ -107,14 +113,24 @@ unsafe fn options(options: *const TfBufferOptions) -> Result<BufferOptions, Fail
 /// to fail. Partial reads may split UTF-8 sequences; the core validates the
 /// complete stream. The callback is used only during the receiving call.
 pub type TfStreamReadFn = Option<
-    unsafe extern "C" fn(user_data: *mut c_void, destination: *mut u8, maximum: usize, read: *mut usize) -> c_int,
+    unsafe extern "C" fn(
+        user_data: *mut c_void,
+        destination: *mut u8,
+        maximum: usize,
+        read: *mut usize,
+    ) -> c_int,
 >;
 
 /// Writer callback: consume up to `length` bytes, store the accepted count in
 /// `*written` and return 0 (the core retries partial writes). Return non-zero
 /// to fail. The callback is used only during the receiving call.
 pub type TfStreamWriteFn = Option<
-    unsafe extern "C" fn(user_data: *mut c_void, bytes: *const u8, length: usize, written: *mut usize) -> c_int,
+    unsafe extern "C" fn(
+        user_data: *mut c_void,
+        bytes: *const u8,
+        length: usize,
+        written: *mut usize,
+    ) -> c_int,
 >;
 
 struct CReader {
@@ -128,9 +144,12 @@ impl StreamReader for CReader {
         let mut bytes = vec![0; maximum];
         let mut read = 0;
         // SAFETY: `bytes` is writable for `maximum` bytes; callback contract.
-        let status = unsafe { (self.callback)(self.user_data, bytes.as_mut_ptr(), maximum, &mut read) };
+        let status =
+            unsafe { (self.callback)(self.user_data, bytes.as_mut_ptr(), maximum, &mut read) };
         if status != 0 {
-            return Err(format!("stream reader callback failed with status {status}"));
+            return Err(format!(
+                "stream reader callback failed with status {status}"
+            ));
         }
         if read > maximum {
             return Err("stream reader callback reported more bytes than requested".into());
@@ -149,9 +168,12 @@ impl StreamWriter for CWriter {
     fn write(&mut self, bytes: Vec<u8>) -> Result<u64, String> {
         let mut written = 0;
         // SAFETY: `bytes` is readable for its length; callback contract.
-        let status = unsafe { (self.callback)(self.user_data, bytes.as_ptr(), bytes.len(), &mut written) };
+        let status =
+            unsafe { (self.callback)(self.user_data, bytes.as_ptr(), bytes.len(), &mut written) };
         if status != 0 {
-            return Err(format!("stream writer callback failed with status {status}"));
+            return Err(format!(
+                "stream writer callback failed with status {status}"
+            ));
         }
         u64::try_from(written).map_err(|error| error.to_string())
     }
@@ -216,7 +238,11 @@ unsafe fn with_buffer(
     operation: impl FnOnce(&mut PortableBuffer) -> Result<(), Failure>,
 ) -> TfStatus {
     // SAFETY: forwarded caller contract.
-    unsafe { ffi::call(error, || operation(&mut *ffi::handle(buffer, "buffer")?.inner.lock()?)) }
+    unsafe {
+        ffi::call(error, || {
+            operation(&mut *ffi::handle(buffer, "buffer")?.inner.lock()?)
+        })
+    }
 }
 
 /// Create a buffer holding a copy of UTF-8 `text`.
@@ -238,7 +264,10 @@ pub unsafe extern "C" fn tf_buffer_from_text(
         ffi::call(error, || {
             let out = Out::new(out, "out")?;
             let text = ffi::text(text, length, "text")?;
-            publish(out, PortableBuffer::from_text(text, self::options(options)?)?);
+            publish(
+                out,
+                PortableBuffer::from_text(text, self::options(options)?)?,
+            );
             Ok(())
         })
     }
@@ -262,7 +291,10 @@ pub unsafe extern "C" fn tf_buffer_from_file(
         ffi::call(error, || {
             let out = Out::new(out, "out")?;
             let path = path::borrow(path, "path")?;
-            publish(out, PortableBuffer::from_file(path, self::options(options)?)?);
+            publish(
+                out,
+                PortableBuffer::from_file(path, self::options(options)?)?,
+            );
             Ok(())
         })
     }
@@ -287,8 +319,14 @@ pub unsafe extern "C" fn tf_buffer_from_reader(
         ffi::call(error, || {
             let out = Out::new(out, "out")?;
             let callback = reader.ok_or_else(|| Failure::null("reader"))?;
-            let reader = Box::new(CReader { callback, user_data });
-            publish(out, PortableBuffer::from_reader(reader, self::options(options)?)?);
+            let reader = Box::new(CReader {
+                callback,
+                user_data,
+            });
+            publish(
+                out,
+                PortableBuffer::from_reader(reader, self::options(options)?)?,
+            );
             Ok(())
         })
     }
@@ -363,7 +401,10 @@ pub unsafe extern "C" fn tf_buffer_is_spilled(
 ///
 /// `buffer` is live; `error` follows the error-slot convention.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn tf_buffer_spill(buffer: *mut TfBuffer, error: *mut *mut TfError) -> TfStatus {
+pub unsafe extern "C" fn tf_buffer_spill(
+    buffer: *mut TfBuffer,
+    error: *mut *mut TfError,
+) -> TfStatus {
     // SAFETY: forwarded caller contract.
     unsafe { with_buffer(buffer, error, |buffer| Ok(buffer.spill()?)) }
 }
@@ -412,7 +453,10 @@ pub unsafe extern "C" fn tf_buffer_copy_to(
         with_buffer(buffer, error, |buffer| {
             let copied = copied?;
             let callback = writer.ok_or_else(|| Failure::null("writer"))?;
-            copied.write(buffer.copy_to(Box::new(CWriter { callback, user_data }))?);
+            copied.write(buffer.copy_to(Box::new(CWriter {
+                callback,
+                user_data,
+            }))?);
             Ok(())
         })
     }
@@ -612,14 +656,19 @@ pub unsafe extern "C" fn tf_processor_process_batch_buffered(
                 .iter()
                 .map(|task| {
                     Ok(BufferTask {
-                        pipeline_id: processor::id(task.pipeline_id, task.pipeline_id_length)?.into(),
+                        pipeline_id: processor::id(task.pipeline_id, task.pipeline_id_length)?
+                            .into(),
                         input: path::borrow(task.input, "task input")?.clone(),
                     })
                 })
                 .collect::<Result<Vec<_>, Failure>>()?;
             let options = self::options(options)?;
             let processor = processor::borrow(processor)?.inner.lock()?;
-            for (index, outcome) in processor.process_batch_buffered(tasks, options).into_iter().enumerate() {
+            for (index, outcome) in processor
+                .process_batch_buffered(tasks, options)
+                .into_iter()
+                .enumerate()
+            {
                 let (output, failure) = match outcome {
                     Ok(buffer) => (
                         ffi::into_handle(TfBuffer {

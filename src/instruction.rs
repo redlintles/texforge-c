@@ -265,7 +265,8 @@ pub unsafe extern "C" fn tf_instruction_new(
             let name = ffi::text(name, length, "name")?;
             let arguments = convert_all(arguments, count)?;
             // `convert_all` already bounded the nesting of every child.
-            let instruction = TfInstruction::from_spec(InstructionSpec::new(name.into(), arguments))?;
+            let instruction =
+                TfInstruction::from_spec(InstructionSpec::new(name.into(), arguments))?;
             out.write(ffi::into_handle(instruction));
             Ok(())
         })
@@ -278,7 +279,9 @@ pub unsafe extern "C" fn tf_instruction_new(
 ///
 /// `instruction` is NULL or a live instruction.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn tf_instruction_clone(instruction: *const TfInstruction) -> *mut TfInstruction {
+pub unsafe extern "C" fn tf_instruction_clone(
+    instruction: *const TfInstruction,
+) -> *mut TfInstruction {
     ffi::guard(ptr::null_mut(), || {
         // SAFETY: forwarded caller contract.
         unsafe { instruction.as_ref() }.map_or(ptr::null_mut(), |i| ffi::into_handle(i.clone()))
@@ -405,7 +408,8 @@ pub struct TfInstructionList {
 
 impl From<Vec<TfInstruction>> for TfInstructionList {
     fn from(instructions: Vec<TfInstruction>) -> Self {
-        let items: Box<[*mut TfInstruction]> = instructions.into_iter().map(ffi::into_handle).collect();
+        let items: Box<[*mut TfInstruction]> =
+            instructions.into_iter().map(ffi::into_handle).collect();
         let length = items.len();
         Self {
             items: Box::into_raw(items).cast(),
@@ -427,7 +431,8 @@ pub unsafe extern "C" fn tf_instruction_list_free(list: *mut TfInstructionList) 
     };
     if !list.items.is_null() {
         // SAFETY: reconstructs the boxed slice created in `From<Vec<_>>`.
-        let items = unsafe { Box::from_raw(ptr::slice_from_raw_parts_mut(list.items, list.length)) };
+        let items =
+            unsafe { Box::from_raw(ptr::slice_from_raw_parts_mut(list.items, list.length)) };
         for item in items {
             // SAFETY: each item is an owned instruction.
             unsafe { tf_instruction_free(item) };

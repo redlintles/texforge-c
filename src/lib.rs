@@ -56,10 +56,10 @@ pub use error::{
 pub use ffi::TF_NTS;
 pub use info::*;
 pub use instruction::{
-    TF_ARG_INSTRUCTION, TF_ARG_NUMBER, TF_ARG_TEXT, TF_ARG_VARIABLE, TfArg, TfArgKind, TfInstruction,
-    TfInstructionList, tf_instruction_argument, tf_instruction_argument_count, tf_instruction_clone,
-    tf_instruction_free, tf_instruction_list_free, tf_instruction_name, tf_instruction_new, tf_nested,
-    tf_number, tf_text, tf_text_n, tf_var, tf_var_n,
+    TF_ARG_INSTRUCTION, TF_ARG_NUMBER, TF_ARG_TEXT, TF_ARG_VARIABLE, TfArg, TfArgKind,
+    TfInstruction, TfInstructionList, tf_instruction_argument, tf_instruction_argument_count,
+    tf_instruction_clone, tf_instruction_free, tf_instruction_list_free, tf_instruction_name,
+    tf_instruction_new, tf_nested, tf_number, tf_text, tf_text_n, tf_var, tf_var_n,
 };
 pub use path::{
     TfFilePath, tf_file_path_free, tf_file_path_from_native_bytes, tf_file_path_from_text,

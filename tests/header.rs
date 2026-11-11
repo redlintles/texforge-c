@@ -8,7 +8,8 @@ use std::path::Path;
 #[test]
 fn header_is_current() {
     let root = Path::new(env!("CARGO_MANIFEST_DIR"));
-    let config = cbindgen::Config::from_file(root.join("cbindgen.toml")).expect("valid cbindgen.toml");
+    let config =
+        cbindgen::Config::from_file(root.join("cbindgen.toml")).expect("valid cbindgen.toml");
     let mut generated = Vec::new();
     cbindgen::Builder::new()
         .with_crate(root)

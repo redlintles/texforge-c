@@ -47,7 +47,8 @@ pub type TfDestroyFn = Option<unsafe extern "C" fn(user_data: *mut c_void)>;
 
 /// A registered C callback; owns `user_data` through `destroy`.
 struct CObserver {
-    callback: unsafe extern "C" fn(*const TfObservation, *mut TfObserverResult, *mut c_void) -> c_int,
+    callback:
+        unsafe extern "C" fn(*const TfObservation, *mut TfObserverResult, *mut c_void) -> c_int,
     user_data: *mut c_void,
     destroy: TfDestroyFn,
 }
@@ -88,7 +89,10 @@ impl Observer for CObserver {
 ///
 /// `observation` is NULL or the live callback argument; `length` is NULL or writable.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn tf_observation_current(observation: *const TfObservation, length: *mut usize) -> *const c_char {
+pub unsafe extern "C" fn tf_observation_current(
+    observation: *const TfObservation,
+    length: *mut usize,
+) -> *const c_char {
     // SAFETY: forwarded caller contract.
     match unsafe { observation.as_ref() } {
         Some(observation) => observation.current.export(length),
@@ -102,7 +106,10 @@ pub unsafe extern "C" fn tf_observation_current(observation: *const TfObservatio
 ///
 /// `observation` is NULL or the live callback argument; `length` is NULL or writable.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn tf_observation_before(observation: *const TfObservation, length: *mut usize) -> *const c_char {
+pub unsafe extern "C" fn tf_observation_before(
+    observation: *const TfObservation,
+    length: *mut usize,
+) -> *const c_char {
     // SAFETY: forwarded caller contract.
     match unsafe { observation.as_ref() } {
         Some(observation) => observation.before.export(length),
@@ -110,13 +117,17 @@ pub unsafe extern "C" fn tf_observation_before(observation: *const TfObservation
     }
 }
 
-/// Mnemonic of the instruction just executed.
+/// Textual DSL form of the instruction just executed, e.g. `"tua;\n"`
+/// (or the label passed to `tf_observers_run`).
 ///
 /// # Safety
 ///
 /// `observation` is NULL or the live callback argument; `length` is NULL or writable.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn tf_observation_instruction(observation: *const TfObservation, length: *mut usize) -> *const c_char {
+pub unsafe extern "C" fn tf_observation_instruction(
+    observation: *const TfObservation,
+    length: *mut usize,
+) -> *const c_char {
     // SAFETY: forwarded caller contract.
     match unsafe { observation.as_ref() } {
         Some(observation) => observation.instruction.export(length),
@@ -286,7 +297,7 @@ pub unsafe extern "C" fn tf_observers_set(
         with_observers(observers, error, move |observers| {
             let callback = callback.ok_or_else(|| Failure::null("callback"))?;
             let name = ffi::text(name, length, "name")?;
-            let OwnedData { user_data, destroy } = guard_data.release();
+            let (user_data, destroy) = guard_data.release();
             observers.set(
                 name.into(),
                 Box::new(CObserver {
@@ -307,11 +318,9 @@ struct OwnedData {
 }
 
 impl OwnedData {
-    fn release(mut self) -> Self {
-        let released = Self {
-            user_data: self.user_data,
-            destroy: self.destroy.take(),
-        };
+    /// Hand the data to its final owner without running `destroy`.
+    fn release(self) -> (*mut c_void, TfDestroyFn) {
+        let released = (self.user_data, self.destroy);
         std::mem::forget(self);
         released
     }
@@ -398,7 +407,10 @@ pub unsafe extern "C" fn tf_observers_schedule_all(
 ///
 /// `observers` is live; `error` follows the error-slot convention.
 #[unsafe(no_mangle)]
-pub unsafe extern "C" fn tf_observers_reset(observers: *mut TfObservers, error: *mut *mut TfError) -> TfStatus {
+pub unsafe extern "C" fn tf_observers_reset(
+    observers: *mut TfObservers,
+    error: *mut *mut TfError,
+) -> TfStatus {
     // SAFETY: forwarded caller contract.
     unsafe {
         with_observers(observers, error, |observers| {

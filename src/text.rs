@@ -262,7 +262,8 @@ pub unsafe extern "C" fn tf_string_list_free(list: *mut TfStringList) {
     };
     if !list.items.is_null() {
         // SAFETY: reconstructs the boxed slice created in `From<Vec<String>>`.
-        let items = unsafe { Box::from_raw(ptr::slice_from_raw_parts_mut(list.items, list.length)) };
+        let items =
+            unsafe { Box::from_raw(ptr::slice_from_raw_parts_mut(list.items, list.length)) };
         for mut item in items {
             // SAFETY: each item is a library-owned string.
             unsafe { tf_string_free(&mut item) };

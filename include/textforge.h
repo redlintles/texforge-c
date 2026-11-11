@@ -3269,7 +3269,8 @@ const char *tf_observation_current(const TfObservation *observation, size_t *len
 const char *tf_observation_before(const TfObservation *observation, size_t *length);
 
 /**
- * Mnemonic of the instruction just executed.
+ * Textual DSL form of the instruction just executed, e.g. `"tua;\n"`
+ * (or the label passed to `tf_observers_run`).
  *
  * # Safety
  *

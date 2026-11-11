@@ -28,7 +28,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 HEADER = ROOT / "include/textforge.h"
 TESTS = ROOT / "tests/c"
-FLAGS = ["-std=c11", "-Wall", "-Wextra", "-Wpedantic", "-Werror", "-g", "-O1"]
+FLAGS = ["-std=c11", "-Wall", "-Wextra", "-Wpedantic", "-Werror", "-g", "-O1", "-pthread"]
 EXAMPLE_PRELUDE = """#define _POSIX_C_SOURCE 200809L
 #include <assert.h>
 #include <stdbool.h>
