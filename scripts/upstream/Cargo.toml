@@ -1,0 +1,15 @@
+# Independent reference to the published crate, used only by scripts/check_core.py.
+# Fetch it with: cargo fetch --manifest-path scripts/upstream/Cargo.toml
+[package]
+name = "textforge-c-upstream-reference"
+version = "0.0.0"
+edition = "2024"
+publish = false
+
+[dependencies]
+textforge = { version = "=0.2.0" }
+
+[lib]
+path = "lib.rs"
+
+[workspace]

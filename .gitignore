@@ -1,0 +1,7 @@
+/target/
+/scripts/upstream/target/
+/scripts/upstream/Cargo.lock
+/vendor/textforge/target/
+/vendor/textforge/Cargo.lock
+/build/
+/dist/

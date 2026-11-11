@@ -1,0 +1,883 @@
+--- a/src/api/mod.rs
++++ b/src/api/mod.rs
+@@ -8,6 +8,8 @@
+ pub mod conditional_builder;
+ pub mod portable;
+ pub mod processor;
++pub mod replace_map_builder;
++pub use replace_map_builder::ReplaceMapBuilder;
+ 
+ use crate::api::block_builder::BlockBuilder;
+ use crate::api::conditional_builder::ConditionalBuilderEach;
+@@ -41,16 +43,45 @@
+         Ok(self)
+     }
+ 
++    /// Define a named replacement map with an ordered, scoped rule builder.
++    /// The callback must finish with `end()`; failed configuration appends no rules.
++    ///
++    /// ```
++    /// use textforge::api::{TextForgeBuilderMethods, processor::{TextForgeProcessor, TextForgeProcessorMethods}};
++    /// let mut processor = TextForgeProcessor::new();
++    /// let id = processor.create_pipeline().define_replace_map("animals", |map| {
++    ///     map.add_replace("cat", "wolf")?.add_replace("wolf", "dog")?.end()
++    /// })?.execute_replace_map("animals")?.build()?;
++    /// assert_eq!(processor.process_all(&id, "cat wolf")?, "wolf dog");
++    /// # Ok::<(), textforge::utils::errors::TextForgeError>(())
++    /// ```
++    fn define_replace_map<F>(
++        &mut self,
++        name: impl Into<ValType>,
++        configure: F,
++    ) -> Result<&mut Self, TextForgeError>
++    where
++        F: FnOnce(&mut ReplaceMapBuilder) -> Result<(), TextForgeError>,
++    {
++        let mut map = ReplaceMapBuilder::new(name);
++        configure(&mut map)?;
++        let rules = map.finish()?;
++        for rule in rules {
++            self.push_token(rule)?;
++        }
++        Ok(self)
++    }
++
+     /// Define or update a rule; forbidden inside blocks.
+     ///
+     /// ```
+     /// use textforge::api::{processor::{TextForgeProcessor, TextForgeProcessorMethods}, TextForgeBuilderMethods};
+     /// let mut processor = TextForgeProcessor::new();
+-    /// let id = processor.create_pipeline().define_replace_map("animals", "cat", "dog").unwrap()
++    /// let id = processor.create_pipeline().add_replace_rule("animals", "cat", "dog").unwrap()
+     ///     .execute_replace_map("animals").unwrap().build().unwrap();
+     /// assert_eq!(processor.process_all(&id, "cat").unwrap(), "dog");
+     /// ```
+-    fn define_replace_map(
++    fn add_replace_rule(
+         &mut self,
+         name: impl Into<ValType>,
+         pattern: impl Into<ValType>,
+@@ -68,7 +99,7 @@
+     /// ```
+     /// use textforge::api::{processor::{TextForgeProcessor, TextForgeProcessorMethods}, TextForgeBuilderMethods};
+     /// let mut processor = TextForgeProcessor::new();
+-    /// let id = processor.create_pipeline().define_replace_map("animals", "cat", "dog").unwrap()
++    /// let id = processor.create_pipeline().add_replace_rule("animals", "cat", "dog").unwrap()
+     ///     .execute_replace_map("animals").unwrap().build().unwrap();
+     /// assert_eq!(processor.process_all(&id, "cat").unwrap(), "dog");
+     /// ```
+--- a/src/api/portable/buffered.rs
++++ b/src/api/portable/buffered.rs
+@@ -23,8 +23,16 @@
+ }
+ impl BufferOptions {
+     pub(super) fn core(&self) -> Result<TextBufferOptions, BindingError> {
++        let threshold = native_size(self.memory_threshold, "BufferOptions")?;
++        std::fs::create_dir_all(self.spill_directory.as_path()).map_err(|error| {
++            execution(TextForgeError::new(
++                TextForgeErrorCode::FileOpeningError(error.to_string().into()),
++                "BufferOptions.spill_directory",
++                self.spill_directory.as_path().display().to_string(),
++            ))
++        })?;
+         Ok(TextBufferOptions::new(
+-            native_size(self.memory_threshold, "BufferOptions")?,
++            threshold,
+             self.spill_directory.0.clone(),
+         ))
+     }
+@@ -152,6 +160,11 @@
+         self.core.copy_to(WriterBridge(writer)).map_err(execution)
+     }
+     pub fn write_to_file(&mut self, path: &FilePath) -> Result<u64, BindingError> {
++        crate::utils::validations::prepare_output_path(
++            path.as_path(),
++            "PortableBuffer.write_to_file",
++        )
++        .map_err(execution)?;
+         let file = std::fs::File::create(path.as_path()).map_err(|error| {
+             execution(TextForgeError::new(
+                 TextForgeErrorCode::FileOpeningError(error.to_string().into()),
+--- a/src/api/portable/instruction.rs
++++ b/src/api/portable/instruction.rs
+@@ -112,10 +112,27 @@
+             }
+         };
+         let mut parameters = Vec::with_capacity(specification.arguments.len());
+-        for argument in &specification.arguments {
++        for (index, argument) in specification.arguments.iter().enumerate() {
+             parameters.push(match argument {
+                 Argument::Text(value) => {
+                     ValType::Literal(TextForgeParamTypes::String(value.clone()))
++                }
++                // Match the public builder's val/var/mut_var conversion exactly:
++                // assignments store numeric literals as decimal text. Keep this
++                // normalization here so every language adapter shares the fix.
++                Argument::Number(value)
++                    if index == 1 && matches!(specification.name.as_str(), "val" | "var" | "mutv") =>
++                {
++                    // Preserve the ordinary portable target-size check before
++                    // adopting the builder's text representation.
++                    let value = usize::try_from(*value).map_err(|_| {
++                        TextForgeError::new(
++                            TextForgeErrorCode::TryIntoFailError("Number exceeds the target's usize range".into()),
++                            specification.name.clone(),
++                            value.to_string(),
++                        )
++                    })?;
++                    ValType::Literal(TextForgeParamTypes::String(value.to_string()))
+                 }
+                 Argument::Number(value) => ValType::Literal(TextForgeParamTypes::Usize(
+                     usize::try_from(*value).map_err(|_| {
+--- a/src/api/portable/mod.rs
++++ b/src/api/portable/mod.rs
+@@ -84,6 +84,40 @@
+         Ok(())
+     }
+ 
++    /// Append a complete map definition atomically, preserving rule order.
++    /// Foreign closures are evaluated by adapters; only owned arguments cross here.
++    ///
++    /// ```
++    /// use textforge::api::portable::{Argument, PipelinePlan, InstructionSpec};
++    /// let mut plan = PipelinePlan::new();
++    /// plan.define_replace_map(Argument::Text("m".into()), vec![
++    ///     (Argument::Text("cat".into()), Argument::Text("dog".into())),
++    /// ])?;
++    /// plan.add(InstructionSpec::new("rmape".into(),vec![Argument::Text("m".into())]))?;
++    /// assert_eq!(plan.compile()?.process("cat")?,"dog");
++    /// # Ok::<(), textforge::api::portable::BindingError>(())
++    /// ```
++    pub fn define_replace_map(
++        &mut self,
++        name: Argument,
++        rules: Vec<(Argument, Argument)>,
++    ) -> Result<(), BindingError> {
++        super::replace_map_builder::validate_rule_count(rules.len())
++            .map_err(|error| BindingError::from_core(ErrorStage::Validation, error))?;
++        let mut converted = Vec::with_capacity(rules.len());
++        for (pattern, replacement) in rules {
++            let spec =
++                InstructionSpec::new("rmapd".into(), vec![name.clone(), pattern, replacement]);
++            converted.push(
++                instruction::convert(&spec)
++                    .map_err(|error| BindingError::from_core(ErrorStage::Conversion, error))?,
++            );
++        }
++        self.nodes
++            .extend(converted.into_iter().map(Node::Instruction));
++        Ok(())
++    }
++
+     /// Move a complete block body into this plan using a dynamically owned name.
+     /// Block-ancestor restrictions are checked by the shared rules at compile time.
+     pub fn block(&mut self, name: String, mut body: PipelinePlan) {
+--- a/src/api/processor/buffered.rs
++++ b/src/api/processor/buffered.rs
+@@ -285,16 +285,22 @@
+             if context.is_halted {
+                 break;
+             }
+-            if token.get_string_repr() == "blk" {
+-                input = token.apply_buffered(input, &mut context)?;
+-                let line = token.to_textforge_line();
+-                let name = line.split_whitespace().nth(1).ok_or_else(|| {
+-                    TextForgeError::new(
+-                        TextForgeErrorCode::IndexOutOfRange("Invalid BLK Block".into()),
+-                        "process_all_with_debug",
+-                        "",
+-                    )
+-                })?;
++            let bound = token.bind_for_debug(&mut context)?;
++            let line = bound.to_textforge_line();
++            if bound.get_string_repr() == "blk" {
++                let name = match bound.get_params().first() {
++                    Some(crate::parser::params::TextForgeParamTypes::String(name)) => name,
++                    _ => {
++                        return Err({
++                            TextForgeError::new(
++                                TextForgeErrorCode::IndexOutOfRange("Invalid BLK Block".into()),
++                                "process_all_with_debug",
++                                "",
++                            )
++                        });
++                    }
++                };
++                input = bound.transform_buffered(input, Some(&mut context))?;
+                 write!(log, "Step: [{}] => [{}]\n{}\n\tBlock Instruction: {}\t\tBlock Name: {}\n\t\t\tCurrent instructions Associated to this Block:\n{}",
+                     counter.to_string().blue(), (counter + 1).to_string().blue(),
+                     "Block Declaration: ".green(), line.yellow(), name.green(),
+@@ -305,11 +311,11 @@
+                     "Step: [{}] => [{}]\nInstruction: {}\nBefore: ",
+                     counter.to_string().blue(),
+                     (counter + 1).to_string().blue(),
+-                    token.to_textforge_line().yellow()
++                    line.yellow()
+                 )
+                 .map_err(adapter_io)?;
+                 write_document(&mut input, log, "\x1b[31m")?;
+-                input = token.apply_buffered(input, &mut context)?;
++                input = bound.transform_buffered(input, Some(&mut context))?;
+                 log.write_all(b"\nAfter: ").map_err(adapter_io)?;
+                 write_document(&mut input, log, "\x1b[32m")?;
+                 log.write_all(b"\n\n").map_err(adapter_io)?;
+--- a/src/api/processor.rs
++++ b/src/api/processor.rs
+@@ -843,22 +843,28 @@
+             if context.is_halted {
+                 break;
+             }
++            let bound = token
++                .bind_for_debug(&mut context)
++                .inspect_err(|error| self.errors.add_error(error.clone()))?;
++            let line = bound.to_textforge_line();
+             let red_result = result.red();
+-            let temp = apply_transform(token, result, &mut self.errors, &mut context)?;
++            let temp = bound
++                .transform(result, Some(&mut context))
++                .inspect_err(|error| self.errors.add_error(error.clone()))?;
+ 
+             if token.get_string_repr() == "blk" {
+-                // Gambiarra feia, futuramente pensar em forma melhor de consultar os parâmetros de um token
+-                let line = token.to_textforge_line();
+-                let mut it = line.split_whitespace();
+-
+-                it.next();
+-                let v = it.next().ok_or_else(|| {
+-                    TextForgeError::new(
+-                        TextForgeErrorCode::IndexOutOfRange("Invalid BLK Block".into()),
+-                        "process_all_with_debug",
+-                        "",
+-                    )
+-                })?;
++                let v = match bound.get_params().first() {
++                    Some(crate::parser::params::TextForgeParamTypes::String(name)) => name,
++                    _ => {
++                        return Err(TextForgeError::new(
++                            TextForgeErrorCode::InvalidParameters(
++                                "Invalid block debug metadata".into(),
++                            ),
++                            "process_all_with_debug",
++                            "block name",
++                        ));
++                    }
++                };
+ 
+                 log.push_str(
+                     &format!(
+@@ -866,7 +872,7 @@
+                         counter.to_string().blue(),
+                         (counter + 1).to_string().blue(),
+                         "Block Declaration: ".to_string().green(),
+-                        token.to_textforge_line().yellow(),
++                        line.yellow(),
+                         v.to_string().green(),
+                         context.get_formatted_block_items(v)?
+                     )
+@@ -878,7 +884,7 @@
+                     "Step: [{}] => [{}]\nInstruction: {}\nBefore: {}\nAfter: {}\n\n",
+                     counter.to_string().blue(),
+                     (counter + 1).to_string().blue(),
+-                    token.to_textforge_line().yellow(),
++                    line.yellow(),
+                     red_result,
+                     temp.green()
+                 ));
+--- a/src/api/replace_map_builder.rs
++++ b/src/api/replace_map_builder.rs
+@@ -0,0 +1,87 @@
++//! Scoped construction of named replacement maps, without executing rules.
++use crate::{
++    parser::resolve_var::{TokenWrapper, ValType},
++    tokens::instructions::rmapd::Rmapd,
++    utils::errors::{TextForgeError, TextForgeErrorCode},
++};
++
++/// Collect rules for one map; `end()` closes configuration, not the pipeline.
++/// Rules keep insertion order and normal execution-context interpolation.
++/// The callback runs once during construction and is not retained.
++///
++/// ```
++/// use textforge::api::{TextForgeBuilderMethods, processor::{TextForgeProcessor, TextForgeProcessorMethods}};
++/// let mut processor = TextForgeProcessor::new();
++/// let id = processor.create_pipeline().define_replace_map("animals", |map| {
++///     map.add_replace("cat", "wolf")?.add_replace("wolf", "dog")?.end()
++/// })?.execute_replace_map("animals")?.add_to_end("!")?.build()?;
++/// assert_eq!(processor.process_all(&id, "cat wolf")?, "wolf dog!");
++/// # Ok::<(), textforge::utils::errors::TextForgeError>(())
++/// ```
++pub struct ReplaceMapBuilder {
++    name: ValType,
++    rules: Vec<TokenWrapper>,
++    ended: bool,
++}
++
++impl ReplaceMapBuilder {
++    /// Create a scoped definition; normally supplied by `define_replace_map`.
++    pub(crate) fn new(name: impl Into<ValType>) -> Self {
++        Self {
++            name: name.into(),
++            rules: Vec::new(),
++            ended: false,
++        }
++    }
++
++    /// Append one regex/replacement pair. Regex compilation stays in the engine.
++    pub fn add_replace(
++        &mut self,
++        pattern: impl Into<ValType>,
++        replacement: impl Into<ValType>,
++    ) -> Result<&mut Self, TextForgeError> {
++        if self.ended {
++            return Err(map_error("Replacement map configuration has already ended"));
++        }
++        self.rules.push(TokenWrapper::new(
++            Box::new(Rmapd::default()),
++            Some(vec![self.name.clone(), pattern.into(), replacement.into()]),
++        ));
++        Ok(self)
++    }
++
++    /// Finish configuration. An empty definition or a second call is an error.
++    /// This method never emits the DSL `end` instruction or executes the map.
++    pub fn end(&mut self) -> Result<(), TextForgeError> {
++        if self.ended {
++            return Err(map_error("Replacement map configuration has already ended"));
++        }
++        validate_rule_count(self.rules.len())?;
++        self.ended = true;
++        Ok(())
++    }
++
++    pub(crate) fn finish(self) -> Result<Vec<TokenWrapper>, TextForgeError> {
++        if !self.ended {
++            return Err(map_error(
++                "Replacement map configuration must finish with end()",
++            ));
++        }
++        Ok(self.rules)
++    }
++}
++
++pub(crate) fn validate_rule_count(count: usize) -> Result<(), TextForgeError> {
++    if count == 0 {
++        return Err(map_error("Replacement maps require at least one rule"));
++    }
++    Ok(())
++}
++
++fn map_error(message: &str) -> TextForgeError {
++    TextForgeError::new(
++        TextForgeErrorCode::ValidationError(message.to_owned().into()),
++        "define_replace_map",
++        "map configuration",
++    )
++}
+--- a/src/bytecode/writer.rs
++++ b/src/bytecode/writer.rs
+@@ -2,14 +2,16 @@
+ 
+ use crate::{
+     parser::resolve_var::TokenWrapper,
+-    utils::{errors::TextForgeError, validations::check_file_path},
++    utils::{errors::TextForgeError, validations::check_pipeline_output_path},
+ };
+ 
+ pub fn write_bytecode_to_file(
+     path: &Path,
+     tokens: Vec<TokenWrapper>,
+ ) -> Result<(), TextForgeError> {
+-    check_file_path(path, None)?;
++    let mut encoded = Vec::new();
++    write_bytecode(&mut encoded, &tokens)?;
++    check_pipeline_output_path(path, None)?;
+ 
+     let mut file = match OpenOptions::new()
+         .create(true)
+@@ -29,7 +31,13 @@
+         }
+     };
+ 
+-    write_bytecode(&mut file, &tokens)
++    file.write_all(&encoded).map_err(|error| {
++        TextForgeError::new(
++            crate::utils::errors::TextForgeErrorCode::FileWritingError(error.to_string().into()),
++            "write_bytecode_to_file",
++            path.display().to_string(),
++        )
++    })
+ }
+ 
+ /// Encode one complete pipeline, including when the sink accepts short writes.
+--- a/src/context/execution_context.rs
++++ b/src/context/execution_context.rs
+@@ -215,7 +215,13 @@
+     fn get_formatted_block_items(&mut self, block_id: &str) -> Result<String, TextForgeError> {
+         use colored::Colorize;
+ 
+-        let block_items = self.take_block(block_id)?;
++        let block_items = self.blocks.get(block_id).ok_or_else(|| {
++            TextForgeError::new(
++                TextForgeErrorCode::BlockNotFound("Block not found".into()),
++                "context.get_formatted_block_items",
++                block_id.to_owned(),
++            )
++        })?;
+         let mut result = String::new();
+ 
+         let len = block_items.len();
+@@ -245,8 +251,6 @@
+             ));
+         }
+ 
+-        self.put_block(block_id, block_items);
+-
+         Ok(result)
+     }
+ 
+--- a/src/parser/params.rs
++++ b/src/parser/params.rs
+@@ -236,6 +236,24 @@
+         let this_is_block_like = Self::is_block_like_signature(&expected);
+ 
+         for p in expected.iter() {
++            // Context references occupy every parameter kind in the portable
++            // API. Recognize them before parsing numeric or nested token data,
++            // just as the existing String branch does.
++            if !matches!(p.token, SyntaxToken::Literal(_))
++                && let Some(value) = chunks.get(i)
++                && let Some(captures) = VAR_REF_RE.captures(value)
++            {
++                let name = captures.get(1).ok_or_else(|| {
++                    TextForgeError::new(
++                        TextForgeErrorCode::TextParsingError("Missing variable name".into()),
++                        "TextForgeParamTypes::parse_with_cursor",
++                        value.clone(),
++                    )
++                })?;
++                out.push(ValType::VarRef(name.as_str().to_owned()));
++                i += 1;
++                continue;
++            }
+             match p.token {
+                 SyntaxToken::Literal(expected_literal) => {
+                     let literal = chunks.get(i).ok_or_else(|| {
+@@ -267,24 +285,7 @@
+                         )
+                     })?;
+ 
+-                    if let Some(caps) = VAR_REF_RE.captures(s) {
+-                        let name = caps
+-                            .get(1)
+-                            .map(|m| m.as_str().trim().to_string())
+-                            .unwrap_or_default();
+-
+-                        if name.is_empty() {
+-                            return Err(TextForgeError::new(
+-                                TextForgeErrorCode::TextParsingError("Empty var name".into()),
+-                                "TextForgeParamTypes::parse_with_cursor",
+-                                format!("index={}", i),
+-                            ));
+-                        }
+-
+-                        out.push(ValType::VarRef(name));
+-                    } else {
+-                        out.push(ValType::Literal(TextForgeParamTypes::String(s.clone())));
+-                    }
++                    out.push(ValType::Literal(TextForgeParamTypes::String(s.clone())));
+ 
+                     i += 1;
+                 }
+--- a/src/parser/resolve_var.rs
++++ b/src/parser/resolve_var.rs
+@@ -158,6 +158,18 @@
+             }
+         }
+     }
++    /// Bind once for debug execution and metadata, so logging cannot consult a
++    /// token template whose default parameters differ from the executed values.
++    pub(crate) fn bind_for_debug(
++        &self,
++        context: &mut GlobalExecutionContext,
++    ) -> Result<Box<dyn InstructionMethods>, TextForgeError> {
++        let params = ValType::resolve_variables(self.token.as_ref(), &self.params, context)?;
++        let mut token = self.token.clone();
++        token.set_params(&params)?;
++        Ok(token)
++    }
++
+     pub fn apply_token<'a>(
+         &self,
+         input: Cow<'a, str>,
+@@ -202,10 +214,11 @@
+ 
+     pub fn to_text_line_unresolved(&self) -> Result<String, TextForgeError> {
+         crate::parser::structure::validate(self)?;
+-        // Post-order traversal binds children before their parent. Calling the
+-        // template's serializer directly would lose the wrapper's parameters.
++        // Serialize owned descriptions using the same registry as the parser.
++        // Individual token Display methods are intended for diagnostics and do
++        // not consistently quote empty text, whitespace, quotes or backslashes.
+         let mut pending = vec![(self, false)];
+-        let mut bound: Vec<Box<dyn InstructionMethods>> = Vec::new();
++        let mut output = Vec::<String>::new();
+         while let Some((wrapper, visited)) = pending.pop() {
+             if !visited {
+                 pending.push((wrapper, true));
+@@ -216,35 +229,84 @@
+                 }
+                 continue;
+             }
+-            let mut parameters = Vec::with_capacity(wrapper.params.len());
+-            for parameter in &wrapper.params {
+-                parameters.push(match parameter {
++            let syntax = match TOKEN_TABLE.find((
++                QuerySource::Identifier(wrapper.get_string_repr().into()),
++                QueryTarget::Syntax,
++            ))? {
++                TargetValue::Syntax(syntax) => syntax,
++                _ => {
++                    return Err(TextForgeError::new(
++                        TextForgeErrorCode::SerializationError("Missing instruction syntax".into()),
++                        "to_text_line_unresolved",
++                        wrapper.get_string_repr(),
++                    ));
++                }
++            };
++            let mut parameters = wrapper.params.iter();
++            let mut fields = vec![wrapper.get_string_repr().to_owned()];
++            for part in syntax.iter() {
++                if let SyntaxToken::Literal(literal) = part.token {
++                    fields.push(literal.to_owned());
++                    continue;
++                }
++                let parameter = parameters.next().ok_or_else(|| {
++                    TextForgeError::new(
++                        TextForgeErrorCode::SerializationError(
++                            "Missing instruction parameter".into(),
++                        ),
++                        "to_text_line_unresolved",
++                        wrapper.get_string_repr(),
++                    )
++                })?;
++                let value = match parameter {
+                     ValType::Literal(TextForgeParamTypes::Token(_)) => {
+-                        let child = bound.pop().ok_or_else(|| {
++                        output.pop().ok_or_else(|| {
+                             TextForgeError::new(
+-                                TextForgeErrorCode::ValidationError("Missing bound child".into()),
++                                TextForgeErrorCode::SerializationError(
++                                    "Missing nested instruction".into(),
++                                ),
+                                 "to_text_line_unresolved",
+-                                "",
++                                wrapper.get_string_repr(),
+                             )
+-                        })?;
+-                        TextForgeParamTypes::Token(child.into())
+-                    }
+-                    ValType::Literal(value) => value.clone(),
+-                    ValType::VarRef(name) => TextForgeParamTypes::String(format!("{{{{{name}}}}}")),
+-                });
+-            }
+-            let mut token = wrapper.token.clone();
+-            token.set_params(&parameters)?;
+-            bound.push(token);
+-        }
+-        let token = bound.pop().ok_or_else(|| {
++                        })?
++                    }
++                    ValType::Literal(TextForgeParamTypes::Usize(value)) => value.to_string(),
++                    ValType::VarRef(name) | ValType::Literal(TextForgeParamTypes::VarRef(name)) => {
++                        let reference = format!("{{{{{name}}}}}");
++                        if !VAR_REF_RE.is_match(&reference) {
++                            return Err(TextForgeError::new(
++                                TextForgeErrorCode::SerializationError(
++                                    "Variable name is not representable in text syntax; use bytecode export".into(),
++                                ),
++                                "to_text_line_unresolved", name.clone(),
++                            ));
++                        }
++                        shell_words::quote(&reference).into_owned()
++                    }
++                    ValType::Literal(TextForgeParamTypes::String(value)) => {
++                        if value.contains(['\n', '\r']) {
++                            return Err(TextForgeError::new(
++                                TextForgeErrorCode::SerializationError(
++                                    "Text pipeline parameters cannot contain line breaks; use bytecode export for multiline values".into(),
++                                ),
++                                "to_text_line_unresolved", wrapper.get_string_repr(),
++                            ));
++                        }
++                        shell_words::quote(value).into_owned()
++                    }
++                };
++                fields.push(value);
++            }
++            output.push(fields.join(" "));
++        }
++        let text = output.pop().ok_or_else(|| {
+             TextForgeError::new(
+-                TextForgeErrorCode::ValidationError("Missing bound root".into()),
++                TextForgeErrorCode::SerializationError("Missing root instruction".into()),
+                 "to_text_line_unresolved",
+                 "",
+             )
+         })?;
+-        Ok(token.to_textforge_line().into())
++        Ok(format!("{text};\n"))
+     }
+     #[cfg(feature = "bytecode")]
+     pub fn to_bytecode_resolved(
+--- a/src/text/writer.rs
++++ b/src/text/writer.rs
+@@ -1,48 +1,37 @@
++use crate::{
++    parser::resolve_var::TokenWrapper,
++    utils::{
++        errors::{TextForgeError, TextForgeErrorCode},
++        validations::check_pipeline_output_path,
++    },
++};
+ use std::{fs::OpenOptions, io::Write, path::Path};
+ 
+-use crate::{
+-    parser::resolve_var::TokenWrapper,
+-    utils::{errors::TextForgeError, validations::check_file_path},
+-};
+-
+ pub fn write_to_file(path: &Path, tokens: &[TokenWrapper]) -> Result<(), TextForgeError> {
+-    check_file_path(path, Some("textforge"))?;
++    // Encode first: unsupported values must not truncate a previous pipeline or
++    // leave an empty file behind. Instruction serialization is shared by all APIs.
++    let mut encoded = String::new();
++    for token in tokens {
++        encoded.push_str(&token.to_text_line_unresolved()?);
++    }
++    check_pipeline_output_path(path, Some("textforge"))?;
+     let mut file = OpenOptions::new()
+         .create(true)
+         .write(true)
+         .truncate(true)
+         .open(path)
+-        .map_err(|_| {
++        .map_err(|error| {
+             TextForgeError::new(
+-                crate::utils::errors::TextForgeErrorCode::FileOpeningError(
+-                    "Failed opening File".into(),
+-                ),
+-                "",
+-                format!("{:?}", path),
++                TextForgeErrorCode::FileOpeningError(error.to_string().into()),
++                "write_to_file",
++                path.display().to_string(),
+             )
+         })?;
+-
+-    let mut success = true;
+-
+-    for token in tokens.iter() {
+-        let line = token.to_text_line_unresolved()?;
+-
+-        match file.write_all(line.as_bytes()) {
+-            Ok(_) => (),
+-            Err(_) => {
+-                success = false;
+-            }
+-        }
+-    }
+-
+-    match success {
+-        true => Ok(()),
+-        false => Err(TextForgeError::new(
+-            crate::utils::errors::TextForgeErrorCode::FileWritingError(
+-                "Failed writing text to textforge file".into(),
+-            ),
+-            "",
+-            "",
+-        )),
+-    }
++    file.write_all(encoded.as_bytes()).map_err(|error| {
++        TextForgeError::new(
++            TextForgeErrorCode::FileWritingError(error.to_string().into()),
++            "write_to_file",
++            path.display().to_string(),
++        )
++    })
+ }
+--- a/src/tokens/instructions/null/mod.rs
++++ b/src/tokens/instructions/null/mod.rs
+@@ -35,7 +35,7 @@
+     }
+     #[cfg(feature = "bytecode")]
+     fn get_opcode(&self) -> u32 {
+-        0x36
++        0x38
+     }
+     fn get_string_repr(&self) -> &'static str {
+         "null"
+--- a/src/tokens/transforms/raw/mod.rs
++++ b/src/tokens/transforms/raw/mod.rs
+@@ -129,7 +129,7 @@
+     }
+     #[cfg(feature = "bytecode")]
+     fn get_opcode(&self) -> u32 {
+-        0x0b
++        0x0c
+     }
+     #[cfg(feature = "bytecode")]
+     fn to_bytecode(&self) -> Result<Vec<u8>, TextForgeError> {
+--- a/src/tokens/transforms/rfw/mod.rs
++++ b/src/tokens/transforms/rfw/mod.rs
+@@ -127,7 +127,7 @@
+     }
+     #[cfg(feature = "bytecode")]
+     fn get_opcode(&self) -> u32 {
+-        0x0c
++        0x0b
+     }
+     #[cfg(feature = "bytecode")]
+     fn to_bytecode(&self) -> Result<Vec<u8>, TextForgeError> {
+--- a/src/utils/test_helpers.rs
++++ b/src/utils/test_helpers.rs
+@@ -8,7 +8,7 @@
+     let id = processor
+         .create_pipeline()
+         .normalize_unicode("nfc")?
+-        .define_replace_map("safe", "NEVER_MATCH_SENTINEL", "replacement")?
++        .add_replace_rule("safe", "NEVER_MATCH_SENTINEL", "replacement")?
+         .execute_replace_map("safe")?
+         // ========== FASE 0: base previsível e grande ==========
+         // Garante B repetido e bastante comprimento desde o início.
+--- a/src/utils/validations.rs
++++ b/src/utils/validations.rs
+@@ -3,9 +3,6 @@
+ use crate::utils::errors::{TextForgeError, TextForgeErrorCode};
+ 
+ pub fn check_file_path(path: &Path, ext: Option<&str>) -> Result<(), TextForgeError> {
+-    let allowed_extensions = ["textforge", "tft", "textforgebc", "tfb"];
+-    let parsed_ext = ext.unwrap_or("tft");
+-
+     // canonicalize() exige que o path exista; isso é ok aqui porque queremos validar um arquivo real.
+     let path = path.canonicalize().map_err(|e| {
+         TextForgeError::new(
+@@ -15,30 +12,7 @@
+         )
+     })?;
+ 
+-    // Extensão
+-    let file_ext = path.extension().and_then(|x| x.to_str()).ok_or_else(|| {
+-        TextForgeError::new(
+-            TextForgeErrorCode::ValidationError("No file extension found".into()),
+-            Cow::Borrowed("check_file_path"),
+-            path.to_string_lossy().to_string(),
+-        )
+-    })?;
+-
+-    if ext.is_some() && file_ext != parsed_ext {
+-        return Err(TextForgeError::new(
+-            TextForgeErrorCode::ValidationError("Wrong file extension".into()),
+-            Cow::Borrowed("check_file_path"),
+-            path.to_string_lossy().to_string(),
+-        ));
+-    }
+-
+-    if ext.is_none() && !allowed_extensions.contains(&file_ext) {
+-        return Err(TextForgeError::new(
+-            TextForgeErrorCode::ValidationError("Wrong file extension".into()),
+-            Cow::Borrowed("check_file_path"),
+-            path.to_string_lossy().to_string(),
+-        ));
+-    }
++    check_pipeline_extension(&path, ext)?;
+ 
+     // Diretório pai (redundante depois do canonicalize, mas mantém a intenção explícita)
+     let parent = path.parent().ok_or_else(|| {
+@@ -66,6 +40,77 @@
+     }
+ 
+     Ok(())
++}
++
++/// Validate format extensions independently from whether the destination exists.
++fn check_pipeline_extension(path: &Path, expected: Option<&str>) -> Result<(), TextForgeError> {
++    let extension = path
++        .extension()
++        .and_then(|value| value.to_str())
++        .ok_or_else(|| {
++            TextForgeError::new(
++                TextForgeErrorCode::ValidationError("No file extension found".into()),
++                "check_file_path",
++                path.display().to_string(),
++            )
++        })?;
++    let accepted = match expected {
++        Some("textforge" | "tft") => matches!(extension, "textforge" | "tft"),
++        Some("textforgebc" | "tfb") => matches!(extension, "textforgebc" | "tfb"),
++        Some(expected) => extension == expected,
++        None => matches!(extension, "textforge" | "tft" | "textforgebc" | "tfb"),
++    };
++    if !accepted {
++        let supported = match expected {
++            Some("textforge" | "tft") => ".textforge or .tft",
++            Some("textforgebc" | "tfb") => ".textforgebc or .tfb",
++            Some(extension) => extension,
++            None => ".textforge, .tft, .textforgebc or .tfb",
++        };
++        return Err(TextForgeError::new(
++            TextForgeErrorCode::ValidationError(
++                format!("Unsupported pipeline extension '.{extension}'; expected {supported}")
++                    .into(),
++            ),
++            "check_file_path",
++            path.display().to_string(),
++        ));
++    }
++    Ok(())
++}
++
++/// Prepare a write destination without requiring a pre-existing output file.
++/// Parent directories are created only after callers have validated their data.
++pub(crate) fn prepare_output_path(path: &Path, instruction: &str) -> Result<(), TextForgeError> {
++    if path.file_name().is_none() || path.is_dir() {
++        return Err(TextForgeError::new(
++            TextForgeErrorCode::ValidationError("Output path must name a file".into()),
++            instruction.to_owned(),
++            path.display().to_string(),
++        ));
++    }
++    if let Some(parent) = path
++        .parent()
++        .filter(|parent| !parent.as_os_str().is_empty())
++    {
++        std::fs::create_dir_all(parent).map_err(|error| {
++            TextForgeError::new(
++                TextForgeErrorCode::FileOpeningError(error.to_string().into()),
++                instruction.to_owned(),
++                path.display().to_string(),
++            )
++        })?;
++    }
++    Ok(())
++}
++
++/// Check a pipeline output's format before creating its parent directories.
++pub(crate) fn check_pipeline_output_path(
++    path: &Path,
++    extension: Option<&str>,
++) -> Result<(), TextForgeError> {
++    check_pipeline_extension(path, extension)?;
++    prepare_output_path(path, "pipeline output")
+ }
+ 
+ /// Valida limites de chunk com índices em *contagem de chars* (não bytes),
+--- a/src/watchers/mod.rs
++++ b/src/watchers/mod.rs
+@@ -524,6 +524,7 @@
+     path: &Path,
+     emit: impl FnOnce(&mut dyn Write) -> Result<(), TextForgeError>,
+ ) -> Result<(), TextForgeError> {
++    crate::utils::validations::prepare_output_path(path, "WatcherList.to_json")?;
+     let parent = path
+         .parent()
+         .filter(|parent| !parent.as_os_str().is_empty())

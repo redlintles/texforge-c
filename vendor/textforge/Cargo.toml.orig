@@ -1,0 +1,61 @@
+[package]
+name = "textforge"
+version = "0.2.0"
+edition = "2024"
+description = "A Flexible scalable DSL that allows the creation of pipelines for text processing"
+license-file = "LICENSE"
+repository = "https://github.com/redlintles/textforge"
+documentation = "https://docs.rs/textforge"
+readme = "README.md"
+
+[dependencies]
+unicode-normalization = "0.1.26"
+tempfile = { version = "3.27.0", optional = true }
+colored = { version = "3.0.0" }
+regex = "1.11.1"
+shell-words = "1.1.0"
+uuid = { version = "1.29.0", features = ["v4"] }
+urlencoding = "2.1.3"
+html-escape = "0.3.0"
+serde_json = "1.0.154"
+serde = { version = "1.0.219", features = ["derive"] }
+rand = { version = "0.10.3", optional = true }
+random-string = { version = "1.1.0", optional = true }
+clap = "4.6.7"
+rayon = "1.12.0"
+evalexpr = "13.1.0"
+
+[lib]
+name = "textforge"
+crate-type = ["rlib"]
+
+[features]
+
+default = []
+bytecode = []
+watchers = []
+buffered = ["tempfile"]
+
+test_access = [
+  "default",
+  "bytecode",
+  "buffered",
+  "tempfile",
+  "rand",
+  "random-string",
+  "watchers",
+]
+
+[[bin]]
+name = "txf"
+path = "src/main.rs"
+
+
+[workspace]
+members = ["."]
+exclude = ["src/bindings/python"]
+resolver = "3"
+
+[[example]]
+name = "allocation_benchmark"
+required-features = ["test_access"]
