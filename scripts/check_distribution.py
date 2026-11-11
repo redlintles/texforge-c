@@ -75,7 +75,8 @@ def main() -> None:
         missing = sorted(name for name in declared if name not in exported)
         assert not missing, f"declared but not exported: {missing}"
 
-        pc_env = {**os.environ, "PKG_CONFIG_PATH": str(lib / "pkgconfig"), "PKG_CONFIG_SYSROOT_DIR": str(stage)}
+        # The .pc file is relocatable (paths relative to ${pcfiledir}), so no sysroot is needed.
+        pc_env = {**os.environ, "PKG_CONFIG_PATH": str(lib / "pkgconfig")}
         cflags = run(["pkg-config", "--cflags", "textforge-c"], env=pc_env).split()
         libs = run(["pkg-config", "--libs", "textforge-c"], env=pc_env).split()
         static_libs = run(["pkg-config", "--static", "--libs-only-other", "--libs-only-l", "textforge-c"],

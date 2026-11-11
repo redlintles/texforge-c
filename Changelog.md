@@ -36,4 +36,8 @@ All notable changes to the TextForge C binding.
   verified by `scripts/check_packaging.py` and a CI job. ConanCenter and the
   vcpkg curated registry do not currently accept Rust-built libraries; see
   `docs/packaging.md`.
+- The pkg-config file is relocatable (paths relative to `${pcfiledir}`), so
+  `cmake --install --prefix <dir>` produces correct `-I`/`-L` flags even when
+  the configure step used the default prefix; covered by
+  `scripts/check_packaging.py`.
 - macOS shared libraries use `@rpath/libtextforge_c.dylib` as install name.

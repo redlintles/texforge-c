@@ -85,14 +85,22 @@ def check_cmake(archive: Path, work: Path) -> None:
     cargo = shutil.which("cargo")
     for shared in ("OFF", "ON"):
         build, prefix = work / f"build-{shared}", work / f"install-{shared}"
+        # The prefix is chosen only at install time: the installed CMake package and
+        # pkg-config file must not depend on the configure-time CMAKE_INSTALL_PREFIX.
         run(["cmake", "-S", str(source), "-B", str(build), "-G", "Ninja", "-DCMAKE_BUILD_TYPE=Release",
-             f"-DBUILD_SHARED_LIBS={shared}", f"-DCMAKE_INSTALL_PREFIX={prefix}",
-             f"-DCARGO_EXECUTABLE={cargo}"], env=env)
+             f"-DBUILD_SHARED_LIBS={shared}", f"-DCARGO_EXECUTABLE={cargo}"], env=env)
         run(["cmake", "--build", str(build)], env=env)
-        run(["cmake", "--install", str(build)])
+        run(["cmake", "--install", str(build), "--prefix", str(prefix)])
         for config in ("Debug", "Release"):
             consumer([f"-DCMAKE_PREFIX_PATH={prefix}"], work / f"consumer-{shared}-{config}", config)
-    print("Offline CMake build from the source release: static and shared, Debug and Release consumers")
+        pc_env = {**os.environ, "PKG_CONFIG_PATH": str(prefix / "lib/pkgconfig")}
+        flags = run(["pkg-config", "--cflags", "--libs", "--static", "textforge-c"], env=pc_env).split()
+        program = work / f"pkg-config-consumer-{shared}"
+        run([os.environ.get("CC", "cc"), "-std=c11", str(ROOT / "examples/c/quickstart.c"), "-o", str(program),
+             *flags, f"-Wl,-rpath,{prefix / 'lib'}"])
+        assert run([str(program)]) == EXPECTED
+    print("Offline CMake build from the source release: static and shared, installed with --prefix only, "
+          "CMake (Debug/Release) and pkg-config consumers")
 
 
 class QuietHandler(http.server.SimpleHTTPRequestHandler):

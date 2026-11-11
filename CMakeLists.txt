@@ -178,9 +178,19 @@ foreach(_configuration IN LISTS _configurations)
     install(FILES "${_targets_file}" DESTINATION "${_config_dir}" CONFIGURATIONS ${_configuration})
 endforeach()
 
-set(PREFIX "${CMAKE_INSTALL_PREFIX}")
-set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
-set(INCLUDEDIR "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
+# The pkg-config file is relocatable: its paths are relative to its own location
+# (${pcfiledir}), so `cmake --install --prefix <dir>` works whatever prefix was
+# configured. Absolute install directories are written as they are.
+if(IS_ABSOLUTE "${CMAKE_INSTALL_LIBDIR}" OR IS_ABSOLUTE "${CMAKE_INSTALL_INCLUDEDIR}")
+    set(PREFIX "${CMAKE_INSTALL_PREFIX}")
+    set(LIBDIR "${CMAKE_INSTALL_FULL_LIBDIR}")
+    set(INCLUDEDIR "${CMAKE_INSTALL_FULL_INCLUDEDIR}")
+else()
+    file(RELATIVE_PATH _pc_to_prefix "/prefix/${CMAKE_INSTALL_LIBDIR}/pkgconfig" "/prefix")
+    set(PREFIX "\${pcfiledir}/${_pc_to_prefix}")
+    set(LIBDIR "\${prefix}/${CMAKE_INSTALL_LIBDIR}")
+    set(INCLUDEDIR "\${prefix}/${CMAKE_INSTALL_INCLUDEDIR}")
+endif()
 set(VERSION "${PROJECT_VERSION}")
 configure_file(textforge-c.pc.in "${CMAKE_CURRENT_BINARY_DIR}/textforge-c.pc" @ONLY)
 install(FILES "${CMAKE_CURRENT_BINARY_DIR}/textforge-c.pc" DESTINATION "${CMAKE_INSTALL_LIBDIR}/pkgconfig")
